@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "space-trek",
+	"version": "${version}",
+	"name": "Space Trek",
+	"description": "A space exploration mod!",
+	"authors": [
+		"Bloxybob (James)"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/space-trek/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.spacetrek.SpaceTrek"
+		],
+		"client": [
+			"com.spacetrek.client.SpaceTrekClient"
+		]
+	},
+	"mixins": [
+		"space-trek.mixins.json",
+		{
+			"config": "space-trek.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.16.14",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

@@ -1,0 +1,15 @@
+{
+	"required": true,
+	"package": "com.spacetrek.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"ExampleMixin",
+		"MixinLivingEntity"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}
