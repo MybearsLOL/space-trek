@@ -16,6 +16,7 @@ public class SpaceTrek implements ModInitializer {
         ModBlocks.initialize();
         ModItems.initialize();
         ModBlockEntities.initialize();
+        ModMenuTypes.initialize();
         ModDimensions.register();
     }
 

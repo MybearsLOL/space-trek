@@ -12,7 +12,6 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.Level;
 
 public class IntakeBlockEntityRenderer implements BlockEntityRenderer<IntakeBlockEntity> {
 
@@ -32,18 +31,12 @@ public class IntakeBlockEntityRenderer implements BlockEntityRenderer<IntakeBloc
     private static final float BLADE_HALF_DEPTH = 0.25f / 16f;
     private static final float BLADE_PITCH_DEGREES = 25f;
 
-    private static final float SPIN_DEGREES_PER_TICK = 6f;
-    private static final int SPIN_PERIOD_TICKS = 60;
-
     public IntakeBlockEntityRenderer(BlockEntityRendererProvider.Context ctx) {}
 
     @Override
     public void render(IntakeBlockEntity entity, float partialTick, PoseStack poseStack,
                        MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
-        Level level = entity.getLevel();
-        if (level == null) return;
-
-        float angle = ((level.getGameTime() % SPIN_PERIOD_TICKS) + partialTick) * SPIN_DEGREES_PER_TICK;
+        float angle = entity.getFanAngle(partialTick);
 
         TextureAtlasSprite sprite = Minecraft.getInstance()
                 .getModelManager()

@@ -2,5 +2,6 @@
   "item.space-trek.rocket_fuel_bucket": "Rocket Fuel Bucket",
   "item.space-trek.oxygen_bucket": "Oxygen Bucket",
   "block.space-trek.fuel_tank": "Fuel Tank",
-  "block.space-trek.intake": "Oxygen Intake"
+  "block.space-trek.intake": "Oxygen Intake",
+  "gui.space-trek.intake.oxygen": "Oxygen: %s / %s buckets"
 }

@@ -1,9 +1,15 @@
 package com.spacetrek;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.Containers;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -31,34 +37,53 @@ public class IntakeBlock extends Block implements EntityBlock {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        if (level.isClientSide) return null;
-        return (lvl, pos, st, be) -> {
-            if (be instanceof IntakeBlockEntity intake) {
-                intake.tick(lvl, pos, st);
-            }
-        };
+        if (type != ModBlockEntities.INTAKE) return null;
+        if (level.isClientSide) {
+            return (lvl, pos, st, be) -> ((IntakeBlockEntity) be).clientTick();
+        }
+        return (lvl, pos, st, be) -> ((IntakeBlockEntity) be).serverTick(lvl, pos, st);
     }
 
     @Override
-    protected InteractionResult useWithoutItem(BlockState state, Level level,
-                                               BlockPos pos, Player player, BlockHitResult hit) {
-        if (level.isClientSide) return InteractionResult.SUCCESS;
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
+                                              Player player, InteractionHand hand, BlockHitResult hit) {
+        if (!stack.is(Items.BUCKET)) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 
         BlockEntity be = level.getBlockEntity(pos);
-        if (!(be instanceof IntakeBlockEntity intake)) return InteractionResult.PASS;
-
-        ItemStack held = player.getMainHandItem();
-
-        // Drain oxygen with empty bucket
-        if (held.getItem() == Items.BUCKET) {
-            ItemStack result = intake.drain();
-            if (result != null) {
-                player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, result);
-                level.sendBlockUpdated(pos, state, state, 3);
-                return InteractionResult.SUCCESS;
-            }
+        if (!(be instanceof IntakeBlockEntity intake) || !intake.hasBucketReady()) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
-        return InteractionResult.PASS;
+        if (!level.isClientSide) {
+            intake.extractBucket();
+            ItemStack filled = ItemUtils.createFilledResult(stack, player, new ItemStack(ModItems.OXYGEN_BUCKET));
+            player.setItemInHand(hand, filled);
+            level.playSound(null, pos, SoundEvents.BUCKET_FILL, SoundSource.BLOCKS, 1.0f, 1.0f);
+        }
+
+        return ItemInteractionResult.sidedSuccess(level.isClientSide);
+    }
+
+    @Override
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
+                                               Player player, BlockHitResult hit) {
+        if (!level.isClientSide) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof IntakeBlockEntity intake) {
+                player.openMenu(intake);
+            }
+        }
+        return InteractionResult.sidedSuccess(level.isClientSide);
+    }
+
+    @Override
+    protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
+        if (!state.is(newState.getBlock())) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof IntakeBlockEntity intake) {
+                Containers.dropContents(level, pos, intake.getFuelContainer());
+            }
+        }
+        super.onRemove(state, level, pos, newState, movedByPiston);
     }
 }
