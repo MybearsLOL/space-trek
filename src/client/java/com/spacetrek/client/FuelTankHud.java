@@ -37,7 +37,9 @@ public class FuelTankHud {
 
         gui.drawCenteredString(
                 mc.font,
-                Component.literal("FUEL TANK"),
+                Component.literal(tank.getGroupBlocks() > 1
+                        ? "FUEL TANK (" + tank.getGroupBlocks() + " blocks)"
+                        : "FUEL TANK"),
                 panelX + panelW / 2,
                 panelY + 6,
                 0xFF4A90D9
@@ -71,8 +73,8 @@ public class FuelTankHud {
         int barH = 8;
         gui.fill(barX, barY, barX + barW, barY + barH, 0xFF1A1A2A);
 
-        int buckets = tank.getBuckets();
-        int maxBuckets = tank.getMaxBuckets();
+        int buckets = tank.getGroupBuckets();
+        int maxBuckets = tank.getGroupCapacityBuckets();
         int fillW = (int) ((float) buckets / maxBuckets * barW);
         if (fillW > 0) {
             gui.fill(barX, barY, barX + fillW, barY + barH, typeColor);

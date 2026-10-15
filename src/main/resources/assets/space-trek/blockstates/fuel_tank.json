@@ -1,5 +1,1241 @@
 {
-  "variants": {
-    "": { "model": "space-trek:block/fuel_tank" }
-  }
+  "multipart": [
+    {
+      "apply": {
+        "model": "space-trek:block/fuel_tank_particle"
+      }
+    },
+    {
+      "when": {
+        "north": "false",
+        "up": "true",
+        "down": "true",
+        "east": "true",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_0"
+      }
+    },
+    {
+      "when": {
+        "north": "false",
+        "up": "false",
+        "down": "true",
+        "east": "true",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_1"
+      }
+    },
+    {
+      "when": {
+        "north": "false",
+        "up": "true",
+        "down": "false",
+        "east": "true",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_2"
+      }
+    },
+    {
+      "when": {
+        "north": "false",
+        "up": "false",
+        "down": "false",
+        "east": "true",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_3"
+      }
+    },
+    {
+      "when": {
+        "north": "false",
+        "up": "true",
+        "down": "true",
+        "east": "false",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_4"
+      }
+    },
+    {
+      "when": {
+        "north": "false",
+        "up": "false",
+        "down": "true",
+        "east": "false",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_5"
+      }
+    },
+    {
+      "when": {
+        "north": "false",
+        "up": "true",
+        "down": "false",
+        "east": "false",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_6"
+      }
+    },
+    {
+      "when": {
+        "north": "false",
+        "up": "false",
+        "down": "false",
+        "east": "false",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_7"
+      }
+    },
+    {
+      "when": {
+        "north": "false",
+        "up": "true",
+        "down": "true",
+        "east": "true",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_8"
+      }
+    },
+    {
+      "when": {
+        "north": "false",
+        "up": "false",
+        "down": "true",
+        "east": "true",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_9"
+      }
+    },
+    {
+      "when": {
+        "north": "false",
+        "up": "true",
+        "down": "false",
+        "east": "true",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_10"
+      }
+    },
+    {
+      "when": {
+        "north": "false",
+        "up": "false",
+        "down": "false",
+        "east": "true",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_11"
+      }
+    },
+    {
+      "when": {
+        "north": "false",
+        "up": "true",
+        "down": "true",
+        "east": "false",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_12"
+      }
+    },
+    {
+      "when": {
+        "north": "false",
+        "up": "false",
+        "down": "true",
+        "east": "false",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_13"
+      }
+    },
+    {
+      "when": {
+        "north": "false",
+        "up": "true",
+        "down": "false",
+        "east": "false",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_14"
+      }
+    },
+    {
+      "when": {
+        "north": "false",
+        "up": "false",
+        "down": "false",
+        "east": "false",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_15"
+      }
+    },
+    {
+      "when": {
+        "east": "false",
+        "up": "true",
+        "down": "true",
+        "south": "true",
+        "north": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_0",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "east": "false",
+        "up": "false",
+        "down": "true",
+        "south": "true",
+        "north": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_1",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "east": "false",
+        "up": "true",
+        "down": "false",
+        "south": "true",
+        "north": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_2",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "east": "false",
+        "up": "false",
+        "down": "false",
+        "south": "true",
+        "north": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_3",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "east": "false",
+        "up": "true",
+        "down": "true",
+        "south": "false",
+        "north": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_4",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "east": "false",
+        "up": "false",
+        "down": "true",
+        "south": "false",
+        "north": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_5",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "east": "false",
+        "up": "true",
+        "down": "false",
+        "south": "false",
+        "north": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_6",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "east": "false",
+        "up": "false",
+        "down": "false",
+        "south": "false",
+        "north": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_7",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "east": "false",
+        "up": "true",
+        "down": "true",
+        "south": "true",
+        "north": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_8",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "east": "false",
+        "up": "false",
+        "down": "true",
+        "south": "true",
+        "north": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_9",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "east": "false",
+        "up": "true",
+        "down": "false",
+        "south": "true",
+        "north": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_10",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "east": "false",
+        "up": "false",
+        "down": "false",
+        "south": "true",
+        "north": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_11",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "east": "false",
+        "up": "true",
+        "down": "true",
+        "south": "false",
+        "north": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_12",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "east": "false",
+        "up": "false",
+        "down": "true",
+        "south": "false",
+        "north": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_13",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "east": "false",
+        "up": "true",
+        "down": "false",
+        "south": "false",
+        "north": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_14",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "east": "false",
+        "up": "false",
+        "down": "false",
+        "south": "false",
+        "north": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_15",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "up": "true",
+        "down": "true",
+        "west": "true",
+        "east": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_0",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "up": "false",
+        "down": "true",
+        "west": "true",
+        "east": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_1",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "up": "true",
+        "down": "false",
+        "west": "true",
+        "east": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_2",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "up": "false",
+        "down": "false",
+        "west": "true",
+        "east": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_3",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "up": "true",
+        "down": "true",
+        "west": "false",
+        "east": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_4",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "up": "false",
+        "down": "true",
+        "west": "false",
+        "east": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_5",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "up": "true",
+        "down": "false",
+        "west": "false",
+        "east": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_6",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "up": "false",
+        "down": "false",
+        "west": "false",
+        "east": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_7",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "up": "true",
+        "down": "true",
+        "west": "true",
+        "east": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_8",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "up": "false",
+        "down": "true",
+        "west": "true",
+        "east": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_9",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "up": "true",
+        "down": "false",
+        "west": "true",
+        "east": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_10",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "up": "false",
+        "down": "false",
+        "west": "true",
+        "east": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_11",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "up": "true",
+        "down": "true",
+        "west": "false",
+        "east": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_12",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "up": "false",
+        "down": "true",
+        "west": "false",
+        "east": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_13",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "up": "true",
+        "down": "false",
+        "west": "false",
+        "east": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_14",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "up": "false",
+        "down": "false",
+        "west": "false",
+        "east": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_15",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "west": "false",
+        "up": "true",
+        "down": "true",
+        "north": "true",
+        "south": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_0",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "west": "false",
+        "up": "false",
+        "down": "true",
+        "north": "true",
+        "south": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_1",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "west": "false",
+        "up": "true",
+        "down": "false",
+        "north": "true",
+        "south": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_2",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "west": "false",
+        "up": "false",
+        "down": "false",
+        "north": "true",
+        "south": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_3",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "west": "false",
+        "up": "true",
+        "down": "true",
+        "north": "false",
+        "south": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_4",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "west": "false",
+        "up": "false",
+        "down": "true",
+        "north": "false",
+        "south": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_5",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "west": "false",
+        "up": "true",
+        "down": "false",
+        "north": "false",
+        "south": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_6",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "west": "false",
+        "up": "false",
+        "down": "false",
+        "north": "false",
+        "south": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_7",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "west": "false",
+        "up": "true",
+        "down": "true",
+        "north": "true",
+        "south": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_8",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "west": "false",
+        "up": "false",
+        "down": "true",
+        "north": "true",
+        "south": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_9",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "west": "false",
+        "up": "true",
+        "down": "false",
+        "north": "true",
+        "south": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_10",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "west": "false",
+        "up": "false",
+        "down": "false",
+        "north": "true",
+        "south": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_11",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "west": "false",
+        "up": "true",
+        "down": "true",
+        "north": "false",
+        "south": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_12",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "west": "false",
+        "up": "false",
+        "down": "true",
+        "north": "false",
+        "south": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_13",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "west": "false",
+        "up": "true",
+        "down": "false",
+        "north": "false",
+        "south": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_14",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "west": "false",
+        "up": "false",
+        "down": "false",
+        "north": "false",
+        "south": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_15",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "south": "true",
+        "north": "true",
+        "east": "true",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_0",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "south": "false",
+        "north": "true",
+        "east": "true",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_1",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "south": "true",
+        "north": "false",
+        "east": "true",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_2",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "south": "false",
+        "north": "false",
+        "east": "true",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_3",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "south": "true",
+        "north": "true",
+        "east": "false",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_4",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "south": "false",
+        "north": "true",
+        "east": "false",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_5",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "south": "true",
+        "north": "false",
+        "east": "false",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_6",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "south": "false",
+        "north": "false",
+        "east": "false",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_7",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "south": "true",
+        "north": "true",
+        "east": "true",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_8",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "south": "false",
+        "north": "true",
+        "east": "true",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_9",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "south": "true",
+        "north": "false",
+        "east": "true",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_10",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "south": "false",
+        "north": "false",
+        "east": "true",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_11",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "south": "true",
+        "north": "true",
+        "east": "false",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_12",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "south": "false",
+        "north": "true",
+        "east": "false",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_13",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "south": "true",
+        "north": "false",
+        "east": "false",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_14",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "south": "false",
+        "north": "false",
+        "east": "false",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_15",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "down": "false",
+        "north": "true",
+        "south": "true",
+        "east": "true",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_0",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "down": "false",
+        "north": "false",
+        "south": "true",
+        "east": "true",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_1",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "down": "false",
+        "north": "true",
+        "south": "false",
+        "east": "true",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_2",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "down": "false",
+        "north": "false",
+        "south": "false",
+        "east": "true",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_3",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "down": "false",
+        "north": "true",
+        "south": "true",
+        "east": "false",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_4",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "down": "false",
+        "north": "false",
+        "south": "true",
+        "east": "false",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_5",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "down": "false",
+        "north": "true",
+        "south": "false",
+        "east": "false",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_6",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "down": "false",
+        "north": "false",
+        "south": "false",
+        "east": "false",
+        "west": "true"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_7",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "down": "false",
+        "north": "true",
+        "south": "true",
+        "east": "true",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_8",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "down": "false",
+        "north": "false",
+        "south": "true",
+        "east": "true",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_9",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "down": "false",
+        "north": "true",
+        "south": "false",
+        "east": "true",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_10",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "down": "false",
+        "north": "false",
+        "south": "false",
+        "east": "true",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_11",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "down": "false",
+        "north": "true",
+        "south": "true",
+        "east": "false",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_12",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "down": "false",
+        "north": "false",
+        "south": "true",
+        "east": "false",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_13",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "down": "false",
+        "north": "true",
+        "south": "false",
+        "east": "false",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_14",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "down": "false",
+        "north": "false",
+        "south": "false",
+        "east": "false",
+        "west": "false"
+      },
+      "apply": {
+        "model": "space-trek:block/fuel_tank_ctm_15",
+        "x": 90
+      }
+    }
+  ]
 }

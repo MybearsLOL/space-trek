@@ -1,0 +1,32 @@
+{
+  "textures": {
+    "all": "space-trek:block/fuel_tank/ctm_13",
+    "particle": "space-trek:block/fuel_tank/ctm_13"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        16,
+        0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#all",
+          "cullface": "north"
+        }
+      }
+    }
+  ]
+}
