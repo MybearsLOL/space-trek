@@ -4,7 +4,6 @@ import com.spacetrek.ModBlockEntities;
 import com.spacetrek.ModBlocks;
 import com.spacetrek.ModDimensions;
 import com.spacetrek.ModFluids;
-import com.spacetrek.ModMenuTypes;
 import foundry.veil.platform.VeilEventPlatform;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
@@ -12,7 +11,6 @@ import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.client.render.fluid.v1.SimpleFluidRenderHandler;
 import net.fabricmc.fabric.api.client.rendering.v1.DimensionRenderingRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 
@@ -48,7 +46,6 @@ public class SpaceTrekClient implements ClientModInitializer {
 
 		BlockEntityRenderers.register(ModBlockEntities.FUEL_TANK, FuelTankBlockEntityRenderer::new);
 		BlockEntityRenderers.register(ModBlockEntities.INTAKE, IntakeBlockEntityRenderer::new);
-		MenuScreens.register(ModMenuTypes.INTAKE, IntakeScreen::new);
 
 		HudRenderCallback.EVENT.register((gui, deltaTracker) ->
 				FuelTankHud.render(gui, deltaTracker.getGameTimeDeltaPartialTick(true))
@@ -56,17 +53,25 @@ public class SpaceTrekClient implements ClientModInitializer {
 
 		// Live planet editing: edit config/space-trek-planets.json while the game runs
 		PlanetConfig.init();
+		SkyConfig.init();
 
 		// "Planet Editor" window in the Veil editor (F6). Only called when ImGuiMC is installed.
 		VeilEventPlatform.INSTANCE.onVeilRegisterInspectors(registry ->
-				registry.registerInspector(new PlanetInspector())
+				{
+					registry.registerInspector(new PlanetInspector());
+					registry.registerInspector(new SkyInspector());
+				}
 		);
 
 		// Overworld: fade the space sky in as the player climbs (see ModDimensions.SPACE_TRANSITION_*)
 		VeilEventPlatform.INSTANCE.onVeilRenderLevelStage(
 				(stage, levelRenderer, bufferSource, matrixStack, frustumMatrix, projectionMatrix, renderTick, deltaTracker, camera, frustum) -> {
 					if (stage == foundry.veil.api.event.VeilRenderLevelStageEvent.Stage.AFTER_SKY) {
-						SpaceSkyRenderer.renderTransition(camera);
+						// Our own sky where the Sky Editor enables one; otherwise the plain fade-in above y 500
+						float partialTick = deltaTracker.getGameTimeDeltaPartialTick(false);
+						if (!SpaceSkyRenderer.renderDimensionSky(camera, partialTick)) {
+							SpaceSkyRenderer.renderTransition(camera);
+						}
 					}
 				}
 		);

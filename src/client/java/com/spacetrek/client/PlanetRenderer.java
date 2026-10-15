@@ -152,6 +152,13 @@ public class PlanetRenderer {
                          boolean useAlpha) {
     }
 
+    /*
+     * Planet orientation (rotationX / rotationY / rotationZ, in degrees), used to line a planet up
+     * in the sky. It is added on top of axialTilt and the spin:
+     *   rotationX - pitch: tips the planet's north pole toward or away from the viewer
+     *   rotationY - turns the planet around its own pole (which continent faces you)
+     *   rotationZ - roll: leans the planet's pole to the left or right
+     */
     public record Planet(ResourceLocation texture,
                          double x, double y, double z,
                          float radius,
@@ -165,7 +172,11 @@ public class PlanetRenderer {
                          float atmosphereDensity,
                          float atmosphereBrightness,
                          Clouds clouds,
-                         String dimension) {
+                         String dimension,
+                         String name,
+                         float rotationX,
+                         float rotationY,
+                         float rotationZ) {
 
         /** Planet without clouds (keeps the older 13-value constructor working). */
         public Planet(ResourceLocation texture,
@@ -181,7 +192,7 @@ public class PlanetRenderer {
                       float atmosphereDensity,
                       float atmosphereBrightness) {
             this(texture, x, y, z, radius, spinDegPerTick, axialTiltDeg, shadowAngleDeg, shadowTiltDeg,
-                    atmosphereColor, twilightColor, atmosphereHeight, atmosphereDensity, atmosphereBrightness, null, "");
+                    atmosphereColor, twilightColor, atmosphereHeight, atmosphereDensity, atmosphereBrightness, null, "", "", 0.0f, 0.0f, 0.0f);
         }
 
         /**
@@ -269,10 +280,46 @@ public class PlanetRenderer {
      * where the camera's position is mapped to a point above the planet.
      */
     public static void render(Camera camera, float alpha, Vec3 viewPosition) {
+        renderPlanets(camera, viewPosition, null, planets, null, alpha);
+    }
+
+    /**
+     * The name the sky editor uses for a planet: its name, or "planet1", "planet2"... if it has none.
+     */
+    public static String planetKey(Planet planet, int index) {
+        String name = planet.name() == null ? "" : planet.name().trim();
+        return name.isEmpty() ? "planet" + (index + 1) : name;
+    }
+
+    /** The planet with this key (see planetKey), or null. */
+    public static Planet findPlanet(String key) {
+        if (key == null || key.isEmpty()) {
+            return null;
+        }
+        List<Planet> list = planets;
+        for (int i = 0; i < list.size(); i++) {
+            if (planetKey(list.get(i), i).equals(key)) {
+                return list.get(i);
+            }
+        }
+        return null;
+    }
+
+    /** Sky turn applied while drawing (null = none). Set only during renderPlanets. */
+    private static Quaternionf skyRotation = null;
+    private static final Quaternionf NO_ROTATION = new Quaternionf();
+
+    /**
+     * Draws a list of planets as seen from viewPosition.
+     *
+     * skyRotation - turns the whole sky (positions, orientation and lighting) around the viewer;
+     *               used for a planet's day/night rotation. null = no turn.
+     * alphas      - one fade value per planet (0 = invisible, 1 = solid), or null to use defaultAlpha.
+     */
+    public static void renderPlanets(Camera camera, Vec3 viewPosition, Quaternionf rotation,
+                                     List<Planet> list, float[] alphas, float defaultAlpha) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null) return;
-        if (alpha <= 0.001f) return;
-        renderAlpha = Math.min(1.0f, alpha);
 
         Vec3 camPos = viewPosition;
         Quaternionf inverseCamRot = camera.rotation().conjugate(new Quaternionf());
@@ -285,12 +332,21 @@ public class PlanetRenderer {
 
         boolean raymarch = isAtmosphereShaderReady();
 
+        skyRotation = rotation;
+
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
 
-        for (Planet planet : planets) {
-            drawPlanet(planet, camPos, inverseCamRot, maxDrawDist, ticks, raymarch);
+        for (int i = 0; i < list.size(); i++) {
+            float alpha = alphas != null && i < alphas.length ? alphas[i] : defaultAlpha;
+            if (alpha <= 0.001f) {
+                continue;
+            }
+            renderAlpha = Math.min(1.0f, alpha);
+            drawPlanet(list.get(i), camPos, inverseCamRot, maxDrawDist, ticks, raymarch);
         }
+
+        skyRotation = null;
 
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
         RenderSystem.defaultBlendFunc();
@@ -332,25 +388,34 @@ public class PlanetRenderer {
 
         Vector3f sun = planet.sunDir();
 
+        // The whole sky turns with the day/night rotation (positions and the star's direction)
+        if (skyRotation != null) {
+            skyRotation.transform(offset);
+            skyRotation.transform(sun);
+        }
+
         // ---- 1) Fallback halo (only when the Veil shader is not available) ----
         if (planet.hasAtmosphere() && !raymarch) {
             drawHalo(planet, offset, drawRadius, sun, inverseCamRot);
         }
 
         // ---- 2) The planet itself ----
-        float spinRad = (float) Math.toRadians((ticks * planet.spinDegPerTick()) % 360.0);
-        float tiltRad = (float) Math.toRadians(planet.axialTiltDeg());
+        float spinRad = (float) Math.toRadians(((ticks * planet.spinDegPerTick()) % 360.0) + planet.rotationY());
+        float tiltRad = (float) Math.toRadians(planet.axialTiltDeg() + planet.rotationX());
+        float rollRad = (float) Math.toRadians(planet.rotationZ());
 
         // v' = CameraInverse * Translate(offset) * Tilt * Spin * Scale * v
         Matrix4f matrix = new Matrix4f()
                 .rotation(inverseCamRot)
                 .translate(offset)
+                .rotate(skyRotation != null ? skyRotation : NO_ROTATION)
+                .rotateZ(rollRad)
                 .rotateX(tiltRad)
                 .rotateY(spinRad)
                 .scale(drawRadius);
 
         // Surface normals in WORLD space (tilt + spin), used for day/night lighting
-        Quaternionf surfaceRot = new Quaternionf().rotateX(tiltRad).rotateY(spinRad);
+        Quaternionf surfaceRot = (skyRotation != null ? new Quaternionf(skyRotation) : new Quaternionf()).rotateZ(rollRad).rotateX(tiltRad).rotateY(spinRad);
         Vector3f n = new Vector3f();
         for (int i = 0; i < VERT_COUNT; i++) {
             surfaceRot.transform(NX[i], NY[i], NZ[i], n);
@@ -423,18 +488,21 @@ public class PlanetRenderer {
         // Same scale factor as the planet: (radius + altitude) / radius
         float cloudRadius = drawRadius * (planet.radius() + Math.max(0.0f, clouds.altitude())) / planet.radius();
 
-        float spinRad = (float) Math.toRadians((ticks * clouds.spinDegPerTick()) % 360.0);
-        float tiltRad = (float) Math.toRadians(planet.axialTiltDeg());
+        float spinRad = (float) Math.toRadians(((ticks * clouds.spinDegPerTick()) % 360.0) + planet.rotationY());
+        float tiltRad = (float) Math.toRadians(planet.axialTiltDeg() + planet.rotationX());
+        float rollRad = (float) Math.toRadians(planet.rotationZ());
 
         Matrix4f matrix = new Matrix4f()
                 .rotation(inverseCamRot)
                 .translate(offset)
+                .rotate(skyRotation != null ? skyRotation : NO_ROTATION)
+                .rotateZ(rollRad)
                 .rotateX(tiltRad)
                 .rotateY(spinRad)
                 .scale(cloudRadius);
 
         // Day / night lighting, same as the surface
-        Quaternionf surfaceRot = new Quaternionf().rotateX(tiltRad).rotateY(spinRad);
+        Quaternionf surfaceRot = (skyRotation != null ? new Quaternionf(skyRotation) : new Quaternionf()).rotateZ(rollRad).rotateX(tiltRad).rotateY(spinRad);
         Vector3f n = new Vector3f();
         for (int i = 0; i < VERT_COUNT; i++) {
             surfaceRot.transform(NX[i], NY[i], NZ[i], n);

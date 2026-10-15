@@ -22,6 +22,8 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.resources.ResourceLocation;
+import java.util.ArrayList;
+import java.util.List;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -55,7 +57,7 @@ public class SpaceSkyRenderer implements DimensionRenderingRegistry.SkyRenderer 
 
         boolean drawn = false;
         if (SkySettings.useShader && isSkyShaderReady()) {
-            drawn = drawProceduralSky(context.camera(), 1.0f);
+            drawn = drawSkyShader(camera(context), 1.0f, 0.0f, SPACE_AXIS, null);
         }
         if (!drawn) {
             renderSkybox(context.positionMatrix());
@@ -67,6 +69,109 @@ public class SpaceSkyRenderer implements DimensionRenderingRegistry.SkyRenderer 
     // ---------------------------------------------------------------------------------
     // PROCEDURAL SKY (Veil shader)
     // ---------------------------------------------------------------------------------
+
+    private static Camera camera(WorldRenderContext context) {
+        return context.camera();
+    }
+
+    private static final Vector3f SPACE_AXIS = new Vector3f(0.0f, 0.0f, -1.0f);
+
+    /** Settings of the atmosphere glow pass (the day sky that covers the stars). */
+    private record Glow(float alpha, float day, float twilight, float sunGlow, Vector3f sunDir,
+                        int zenith, int horizon, int twilightColor) {
+    }
+
+    private static float smoothstep(float edge0, float edge1, float x) {
+        if (edge1 <= edge0) {
+            return x >= edge1 ? 1.0f : 0.0f;
+        }
+        float t = Math.max(0.0f, Math.min(1.0f, (x - edge0) / (edge1 - edge0)));
+        return t * t * (3.0f - 2.0f * t);
+    }
+
+    /**
+     * Our own sky for a dimension (the Sky Editor decides which ones). Draws, in order:
+     *   1. stars, Milky Way, nebulae, turned by the day/night rotation
+     *   2. the planets, seen from the point on the home planet
+     *   3. the atmosphere glow, which hides the stars and planets by day and is gone at night
+     * The vanilla sun, moon and sky colour are covered completely. There is no sun or moon
+     * disc: they come later, when you add them.
+     *
+     * Returns false if this dimension has no enabled sky (vanilla sky stays).
+     * Called after the vanilla sky has been drawn (Veil's AFTER_SKY stage).
+     */
+    public static boolean renderDimensionSky(Camera camera, float partialTick) {
+        Minecraft minecraft = Minecraft.getInstance();
+        Level level = minecraft.level;
+        if (level == null || level.dimension() == ModDimensions.SPACE_LEVEL) {
+            return false;
+        }
+
+        DimensionSky sky = SkyConfig.get(level.dimension().location().toString());
+        if (sky == null || !sky.enabled || !isSkyShaderReady()) {
+            return false;
+        }
+
+        Vec3 cameraPos = camera.getPosition();
+
+        // The sky turns like the vanilla sun does: one full turn per day
+        float angle = level.getTimeOfDay(partialTick) * ((float) Math.PI * 2.0f);
+        double tilt = Math.toRadians(sky.poleTilt);
+        Vector3f axis = new Vector3f(0.0f, (float) Math.sin(tilt), (float) -Math.cos(tilt));
+        Quaternionf celestialToWorld = new Quaternionf().rotationAxis(-angle, axis.x, axis.y, axis.z);
+        Vector3f sunWorld = celestialToWorld.transform(0.0f, 1.0f, 0.0f, new Vector3f());
+
+        // Day / night from the sun's height above the horizon
+        float elevation = (float) Math.toDegrees(Math.asin(Math.max(-1.0f, Math.min(1.0f, sunWorld.y))));
+        float day = smoothstep(sky.dayStartElevation, sky.dayEndElevation, elevation);
+        float twilight = (float) Math.exp(-(elevation * elevation) / (2.0 * 12.0 * 12.0));
+        float altitudeFactor = 1.0f - smoothstep(sky.fadeStartY, sky.fadeEndY, (float) cameraPos.y);
+
+        // 1) background: replace the vanilla sky completely, then the stars
+        RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT, Minecraft.ON_OSX);
+        drawSkyShader(camera, 1.0f, angle, axis, null);
+
+        // 2) planets, as seen from the home planet
+        PlanetRenderer.Planet home = PlanetRenderer.findPlanet(sky.homePlanet);
+        Vec3 viewPosition = cameraPos;
+        if (home != null) {
+            double altitude = Math.max(0.0, cameraPos.y - ModDimensions.HOME_SURFACE_Y);
+            Vec3 offset = PlanetGates.capOffset(cameraPos.x, cameraPos.z, home.radius() + altitude);
+            viewPosition = new Vec3(home.x() + offset.x, home.y() + offset.y, home.z() + offset.z);
+        }
+
+        List<PlanetRenderer.Planet> list = new ArrayList<>();
+        List<Float> fades = new ArrayList<>();
+        if (home != null) {
+            // The planet we stand on only shows when climbing out of the atmosphere
+            list.add(home);
+            fades.add(smoothstep((float) ModDimensions.SPACE_TRANSITION_START_Y,
+                    (float) ModDimensions.SPACE_TRANSITION_END_Y, (float) cameraPos.y));
+        }
+        for (String key : sky.planets) {
+            PlanetRenderer.Planet planet = PlanetRenderer.findPlanet(key);
+            if (planet != null && planet != home) {
+                list.add(planet);
+                fades.add(1.0f);
+            }
+        }
+        float[] alphas = new float[fades.size()];
+        for (int i = 0; i < alphas.length; i++) {
+            alphas[i] = fades.get(i);
+        }
+        PlanetRenderer.renderPlanets(camera, viewPosition, celestialToWorld, list, alphas, 1.0f);
+
+        // 3) atmosphere glow on top
+        float glowAlpha = sky.atmosphereStrength * altitudeFactor * day;
+        float glowTwilight = twilight * altitudeFactor * sky.atmosphereStrength;
+        if (glowAlpha > 0.002f || glowTwilight > 0.002f) {
+            Glow glow = new Glow(glowAlpha, day, glowTwilight, sky.sunGlow * altitudeFactor, sunWorld,
+                    sky.atmosphereColor, sky.horizonColor, sky.twilightColor);
+            drawSkyShader(camera, 1.0f, angle, axis, glow);
+        }
+        return true;
+    }
 
     private static boolean isSkyShaderReady() {
         try {
@@ -119,7 +224,7 @@ public class SpaceSkyRenderer implements DimensionRenderingRegistry.SkyRenderer 
         float alpha = progress * progress * (3.0f - 2.0f * progress);
 
         if (isSkyShaderReady()) {
-            drawProceduralSky(camera, alpha);
+            drawSkyShader(camera, alpha, 0.0f, SPACE_AXIS, null);
         }
 
         Vec3 viewPosition = cameraPos;
@@ -131,7 +236,7 @@ public class SpaceSkyRenderer implements DimensionRenderingRegistry.SkyRenderer 
         PlanetRenderer.render(camera, alpha, viewPosition);
     }
 
-    private static boolean drawProceduralSky(Camera camera, float opacity) {
+    private static boolean drawSkyShader(Camera camera, float opacity, float angle, Vector3f axis, Glow glow) {
         ShaderProgram shader = VeilRenderSystem.setShader(SKY_SHADER);
         if (shader == null) {
             return false;
@@ -188,7 +293,26 @@ public class SpaceSkyRenderer implements DimensionRenderingRegistry.SkyRenderer 
         set(shader, "Seed", SkySettings.seed);
         set(shader, "Opacity", opacity);
 
-        if (opacity < 0.999f) {
+        set(shader, "SkyAxisX", axis.x);
+        set(shader, "SkyAxisY", axis.y);
+        set(shader, "SkyAxisZ", axis.z);
+        set(shader, "SkyAngle", angle);
+
+        set(shader, "GlowOnly", glow != null ? 1.0f : 0.0f);
+        if (glow != null) {
+            set(shader, "SunWorldX", glow.sunDir().x);
+            set(shader, "SunWorldY", glow.sunDir().y);
+            set(shader, "SunWorldZ", glow.sunDir().z);
+            setColor(shader, "AtmoZenith", glow.zenith());
+            setColor(shader, "AtmoHorizon", glow.horizon());
+            setColor(shader, "AtmoTwilight", glow.twilightColor());
+            set(shader, "AtmoAlpha", glow.alpha());
+            set(shader, "AtmoDay", glow.day());
+            set(shader, "AtmoTwilight", glow.twilight());
+            set(shader, "SunGlow", glow.sunGlow());
+        }
+
+        if (glow != null || opacity < 0.999f) {
             RenderSystem.enableBlend();
         } else {
             RenderSystem.disableBlend();

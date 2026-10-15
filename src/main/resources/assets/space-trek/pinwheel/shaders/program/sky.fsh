@@ -54,6 +54,31 @@ uniform float Seed;
 // 1 = fully covers what is behind (space dimension), lower = fades in over the normal sky
 uniform float Opacity;
 
+// ---- turning of the sky (day/night): celestial direction = rotate(world direction, axis, SkyAngle)
+uniform float SkyAxisX;
+uniform float SkyAxisY;
+uniform float SkyAxisZ;
+uniform float SkyAngle;
+
+// ---- atmosphere glow pass (GlowOnly > 0.5 draws only the day sky colour, with transparency)
+uniform float GlowOnly;
+uniform float SunWorldX;
+uniform float SunWorldY;
+uniform float SunWorldZ;
+uniform float AtmoZenithR;
+uniform float AtmoZenithG;
+uniform float AtmoZenithB;
+uniform float AtmoHorizonR;
+uniform float AtmoHorizonG;
+uniform float AtmoHorizonB;
+uniform float AtmoTwilightR;
+uniform float AtmoTwilightG;
+uniform float AtmoTwilightB;
+uniform float AtmoAlpha;     // how much the glow hides what is behind it (0 at night)
+uniform float AtmoDay;       // 0 = night, 1 = full day
+uniform float AtmoTwilight;  // 1 = sun on the horizon (sunrise / sunset), 0 = far from it
+uniform float SunGlow;       // strength of the soft glow around the invisible sun
+
 in vec2 vNdc;
 out vec4 fragColor;
 
@@ -147,13 +172,54 @@ vec3 starLayer(vec3 dir, float scale, float probability, float sizeMul, float br
     return total;
 }
 
+// Rotates v around the unit axis k by angle a (Rodrigues' formula)
+vec3 rotateAround(vec3 v, vec3 k, float a) {
+    float c = cos(a);
+    float s = sin(a);
+    return v * c + cross(k, v) * s + k * dot(k, v) * (1.0 - c);
+}
+
 void main() {
     vec3 right = vec3(CamRightX, CamRightY, CamRightZ);
     vec3 up = vec3(CamUpX, CamUpY, CamUpZ);
     vec3 forward = vec3(CamForwardX, CamForwardY, CamForwardZ);
 
     // World-space direction of this pixel
-    vec3 dir = normalize(forward + right * (vNdc.x * TanHalfFovX) + up * (vNdc.y * TanHalfFovY));
+    vec3 dirWorld = normalize(forward + right * (vNdc.x * TanHalfFovX) + up * (vNdc.y * TanHalfFovY));
+
+    // ---- Atmosphere glow pass: the day sky that covers the stars ----
+    if (GlowOnly > 0.5) {
+        vec3 sunDir = normalize(vec3(SunWorldX, SunWorldY, SunWorldZ));
+        vec3 zenith = vec3(AtmoZenithR, AtmoZenithG, AtmoZenithB);
+        vec3 horizon = vec3(AtmoHorizonR, AtmoHorizonG, AtmoHorizonB);
+        vec3 twilightColor = vec3(AtmoTwilightR, AtmoTwilightG, AtmoTwilightB);
+
+        float upAmount = clamp(dirWorld.y, 0.0, 1.0);
+        vec3 glowColor = mix(zenith, horizon, pow(1.0 - upAmount, 3.0));
+
+        // The sky is darker when the sun is low
+        glowColor *= mix(0.5, 1.0, AtmoDay);
+
+        // Soft glow around the sun's position (the sun itself is not drawn)
+        float sunDot = max(dot(dirWorld, sunDir), 0.0);
+        float halo = (pow(sunDot, 6.0) * 0.35 + pow(sunDot, 48.0) * 0.5) * SunGlow;
+        glowColor += mix(horizon, twilightColor, AtmoTwilight) * halo;
+
+        // Warm band along the horizon, strongest on the side where the sun is
+        vec2 flatDir = normalize(dirWorld.xz + vec2(0.00001));
+        vec2 flatSun = normalize(sunDir.xz + vec2(0.00001));
+        float towardSun = 0.5 + 0.5 * dot(flatDir, flatSun);
+        float horizonBand = pow(1.0 - clamp(abs(dirWorld.y) * 2.5, 0.0, 1.0), 3.0) * towardSun * AtmoTwilight;
+        glowColor = mix(glowColor, twilightColor, clamp(horizonBand, 0.0, 1.0));
+
+        float glowAlpha = clamp(AtmoAlpha + horizonBand * 0.55, 0.0, 1.0);
+        fragColor = vec4(glowColor, glowAlpha * Opacity);
+        return;
+    }
+
+    // ---- Space pass: turn the sky with the day/night rotation ----
+    vec3 axis = normalize(vec3(SkyAxisX, SkyAxisY, SkyAxisZ) + vec3(0.000001));
+    vec3 dir = rotateAround(dirWorld, axis, SkyAngle);
 
     // How big one pixel is, in direction space (shrinks when you zoom in)
     float pixel = max(length(dFdx(dir)), length(dFdy(dir)));

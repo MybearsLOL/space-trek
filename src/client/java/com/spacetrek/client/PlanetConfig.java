@@ -56,11 +56,11 @@ public class PlanetConfig {
         settings.addProperty("sunIntensity", s[2]);
         settings.addProperty("mieStrength", s[3]);
         root.add("settings", settings);
-        root.add("sky", skyToJson());
 
         JsonArray array = new JsonArray();
         for (PlanetRenderer.Planet p : list) {
             JsonObject o = new JsonObject();
+            o.addProperty("name", p.name() == null ? "" : p.name());
             o.addProperty("texture", p.texture().toString());
             o.addProperty("x", p.x());
             o.addProperty("y", p.y());
@@ -68,6 +68,9 @@ public class PlanetConfig {
             o.addProperty("radius", p.radius());
             o.addProperty("spin", p.spinDegPerTick());
             o.addProperty("tilt", p.axialTiltDeg());
+            o.addProperty("rotationX", p.rotationX());
+            o.addProperty("rotationY", p.rotationY());
+            o.addProperty("rotationZ", p.rotationZ());
             o.addProperty("shadowAngle", p.shadowAngleDeg());
             o.addProperty("shadowTilt", p.shadowTiltDeg());
             o.addProperty("atmosphereColor", String.format("#%06X", p.atmosphereColor() & 0xFFFFFF));
@@ -108,26 +111,9 @@ public class PlanetConfig {
                 "sunIntensity": 20.0,
                 "mieStrength": 0.2
               },
-              "sky": {
-                "useShader": true,
-                "starDensity": 1.0,
-                "starBrightness": 1.0,
-                "starSize": 1.0,
-                "twinkle": 0.3,
-                "bandStrength": 1.0,
-                "bandWidth": 0.22,
-                "bandTilt": 60,
-                "bandRotation": 25,
-                "bandColorA": "#7FA0FF",
-                "bandColorB": "#FFC890",
-                "nebulaStrength": 0.6,
-                "nebulaScale": 2.2,
-                "nebulaColorA": "#7A3CFF",
-                "nebulaColorB": "#1FB8C9",
-                "seed": 1.0
-              },
               "planets": [
                 {
+                  "name": "earth",
                   "texture": "space-trek:textures/planet/example_planet.png",
                   "x": 0, "y": 300, "z": -6000,
                   "radius": 2500,
@@ -143,6 +129,7 @@ public class PlanetConfig {
                   "dimension": "minecraft:overworld"
                 },
                 {
+                  "name": "red",
                   "texture": "space-trek:textures/planet/example_planet.png",
                   "x": -14000, "y": 200, "z": 4000,
                   "radius": 6000,
@@ -205,10 +192,6 @@ public class PlanetConfig {
                     getFloat(settings, "mieStrength", 0.2f)
             );
 
-            if (root.has("sky")) {
-                parseSky(root.getAsJsonObject("sky"));
-            }
-
             List<PlanetRenderer.Planet> list = new ArrayList<>();
             JsonArray array = root.getAsJsonArray("planets");
             for (JsonElement element : array) {
@@ -224,46 +207,6 @@ public class PlanetConfig {
             SpaceTrek.LOGGER.warn("Planet file error: {}", e.toString());
             message("Planet file error: " + e.getMessage());
         }
-    }
-
-    private static void parseSky(JsonObject o) {
-        SkySettings.useShader = o.has("useShader") ? o.get("useShader").getAsBoolean() : SkySettings.useShader;
-        SkySettings.starDensity = getFloat(o, "starDensity", SkySettings.starDensity);
-        SkySettings.starBrightness = getFloat(o, "starBrightness", SkySettings.starBrightness);
-        SkySettings.starSize = getFloat(o, "starSize", SkySettings.starSize);
-        SkySettings.twinkle = getFloat(o, "twinkle", SkySettings.twinkle);
-        SkySettings.bandStrength = getFloat(o, "bandStrength", SkySettings.bandStrength);
-        SkySettings.bandWidth = getFloat(o, "bandWidth", SkySettings.bandWidth);
-        SkySettings.bandTilt = getFloat(o, "bandTilt", SkySettings.bandTilt);
-        SkySettings.bandRotation = getFloat(o, "bandRotation", SkySettings.bandRotation);
-        SkySettings.bandColorA = getColor(o, "bandColorA", SkySettings.bandColorA);
-        SkySettings.bandColorB = getColor(o, "bandColorB", SkySettings.bandColorB);
-        SkySettings.nebulaStrength = getFloat(o, "nebulaStrength", SkySettings.nebulaStrength);
-        SkySettings.nebulaScale = getFloat(o, "nebulaScale", SkySettings.nebulaScale);
-        SkySettings.nebulaColorA = getColor(o, "nebulaColorA", SkySettings.nebulaColorA);
-        SkySettings.nebulaColorB = getColor(o, "nebulaColorB", SkySettings.nebulaColorB);
-        SkySettings.seed = getFloat(o, "seed", SkySettings.seed);
-    }
-
-    private static JsonObject skyToJson() {
-        JsonObject o = new JsonObject();
-        o.addProperty("useShader", SkySettings.useShader);
-        o.addProperty("starDensity", SkySettings.starDensity);
-        o.addProperty("starBrightness", SkySettings.starBrightness);
-        o.addProperty("starSize", SkySettings.starSize);
-        o.addProperty("twinkle", SkySettings.twinkle);
-        o.addProperty("bandStrength", SkySettings.bandStrength);
-        o.addProperty("bandWidth", SkySettings.bandWidth);
-        o.addProperty("bandTilt", SkySettings.bandTilt);
-        o.addProperty("bandRotation", SkySettings.bandRotation);
-        o.addProperty("bandColorA", String.format("#%06X", SkySettings.bandColorA & 0xFFFFFF));
-        o.addProperty("bandColorB", String.format("#%06X", SkySettings.bandColorB & 0xFFFFFF));
-        o.addProperty("nebulaStrength", SkySettings.nebulaStrength);
-        o.addProperty("nebulaScale", SkySettings.nebulaScale);
-        o.addProperty("nebulaColorA", String.format("#%06X", SkySettings.nebulaColorA & 0xFFFFFF));
-        o.addProperty("nebulaColorB", String.format("#%06X", SkySettings.nebulaColorB & 0xFFFFFF));
-        o.addProperty("seed", SkySettings.seed);
-        return o;
     }
 
     private static PlanetRenderer.Planet parsePlanet(JsonObject o) {
@@ -295,7 +238,11 @@ public class PlanetConfig {
                 getFloat(o, "atmosphereDensity", 0.35f),
                 getFloat(o, "atmosphereBrightness", 1.0f),
                 clouds,
-                getString(o, "dimension", "").trim()
+                getString(o, "dimension", "").trim(),
+                getString(o, "name", "").trim(),
+                getFloat(o, "rotationX", 0.0f),
+                getFloat(o, "rotationY", 0.0f),
+                getFloat(o, "rotationZ", 0.0f)
         );
     }
 

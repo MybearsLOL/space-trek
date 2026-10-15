@@ -33,24 +33,6 @@ public class PlanetInspector extends SingleWindowInspector {
     private final float[] sunIntensity = new float[1];
     private final float[] mieStrength = new float[1];
 
-    // ---- sky ----
-    private final ImBoolean skyShader = new ImBoolean(true);
-    private final float[] starDensity = new float[1];
-    private final float[] starBrightness = new float[1];
-    private final float[] starSize = new float[1];
-    private final float[] twinkle = new float[1];
-    private final float[] bandStrength = new float[1];
-    private final float[] bandWidth = new float[1];
-    private final float[] bandTilt = new float[1];
-    private final float[] bandRotation = new float[1];
-    private final float[] bandColorA = new float[3];
-    private final float[] bandColorB = new float[3];
-    private final float[] nebulaStrength = new float[1];
-    private final float[] nebulaScale = new float[1];
-    private final float[] nebulaColorA = new float[3];
-    private final float[] nebulaColorB = new float[3];
-    private final float[] skySeed = new float[1];
-
     private int seenVersion = -1;
     private String status = "";
 
@@ -80,38 +62,17 @@ public class PlanetInspector extends SingleWindowInspector {
             changed |= ImGui.sliderFloat("Haze (Mie) strength", mieStrength, 0.0f, 2.0f);
         }
 
-        boolean skyChanged = false;
-        if (ImGui.collapsingHeader("Sky (stars, Milky Way, nebulae)", ImGuiTreeNodeFlags.DefaultOpen)) {
-            skyChanged |= ImGui.checkbox("Use shader sky (off = image skybox)", skyShader);
-            skyChanged |= ImGui.sliderFloat("Star density", starDensity, 0.0f, 3.0f);
-            skyChanged |= ImGui.sliderFloat("Star brightness", starBrightness, 0.0f, 4.0f);
-            skyChanged |= ImGui.sliderFloat("Star size", starSize, 0.2f, 4.0f);
-            skyChanged |= ImGui.sliderFloat("Twinkle", twinkle, 0.0f, 1.0f);
-
-            ImGui.separator();
-            skyChanged |= ImGui.sliderFloat("Milky Way strength", bandStrength, 0.0f, 3.0f);
-            skyChanged |= ImGui.sliderFloat("Milky Way width", bandWidth, 0.05f, 0.6f);
-            skyChanged |= ImGui.sliderFloat("Milky Way tilt", bandTilt, 0.0f, 90.0f);
-            skyChanged |= ImGui.sliderFloat("Milky Way rotation", bandRotation, 0.0f, 360.0f);
-            skyChanged |= ImGui.colorEdit3("Milky Way outer colour", bandColorA);
-            skyChanged |= ImGui.colorEdit3("Milky Way core colour", bandColorB);
-
-            ImGui.separator();
-            skyChanged |= ImGui.sliderFloat("Nebula strength", nebulaStrength, 0.0f, 3.0f);
-            skyChanged |= ImGui.sliderFloat("Nebula scale", nebulaScale, 0.5f, 8.0f);
-            skyChanged |= ImGui.colorEdit3("Nebula colour A", nebulaColorA);
-            skyChanged |= ImGui.colorEdit3("Nebula colour B", nebulaColorB);
-
-            ImGui.separator();
-            skyChanged |= ImGui.sliderFloat("Sky seed (new random sky)", skySeed, 0.0f, 100.0f);
-        }
-
         int removeIndex = -1;
         for (int i = 0; i < planets.size(); i++) {
             Editable p = planets.get(i);
             ImGui.pushID(i);
 
-            if (ImGui.collapsingHeader("Planet " + (i + 1), ImGuiTreeNodeFlags.DefaultOpen)) {
+            String header = p.appliedName.isEmpty() ? "Planet " + (i + 1) : "Planet " + (i + 1) + " (" + p.appliedName + ")";
+            if (ImGui.collapsingHeader(header + "###planet" + i, ImGuiTreeNodeFlags.DefaultOpen)) {
+                if (ImGui.inputText("Name (press Enter)", p.name, ImGuiInputTextFlags.EnterReturnsTrue)) {
+                    p.appliedName = p.name.get().trim();
+                    changed = true;
+                }
                 if (ImGui.inputText("Texture (press Enter)", p.texture, ImGuiInputTextFlags.EnterReturnsTrue)) {
                     p.appliedTexture = p.texture.get();
                     changed = true;
@@ -120,6 +81,11 @@ public class PlanetInspector extends SingleWindowInspector {
                 changed |= ImGui.dragFloat("Radius", p.radius, 10.0f, 1.0f, 1000000.0f);
                 changed |= ImGui.sliderFloat("Spin (deg/tick)", p.spin, -1.0f, 1.0f);
                 changed |= ImGui.sliderFloat("Axial tilt", p.tilt, -90.0f, 90.0f);
+
+                ImGui.text("Orientation (to line the planet up in the sky)");
+                changed |= ImGui.sliderFloat("Rotation X (pitch)", p.rotationX, -180.0f, 180.0f);
+                changed |= ImGui.sliderFloat("Rotation Y (which side faces you)", p.rotationY, -180.0f, 180.0f);
+                changed |= ImGui.sliderFloat("Rotation Z (roll)", p.rotationZ, -180.0f, 180.0f);
 
                 ImGui.separator();
                 changed |= ImGui.sliderFloat("Shadow angle", p.shadowAngle, 0.0f, 360.0f);
@@ -185,25 +151,6 @@ public class PlanetInspector extends SingleWindowInspector {
             ImGui.text(status);
         }
 
-        if (skyChanged) {
-            SkySettings.useShader = skyShader.get();
-            SkySettings.starDensity = starDensity[0];
-            SkySettings.starBrightness = starBrightness[0];
-            SkySettings.starSize = starSize[0];
-            SkySettings.twinkle = twinkle[0];
-            SkySettings.bandStrength = bandStrength[0];
-            SkySettings.bandWidth = bandWidth[0];
-            SkySettings.bandTilt = bandTilt[0];
-            SkySettings.bandRotation = bandRotation[0];
-            SkySettings.bandColorA = toColor(bandColorA);
-            SkySettings.bandColorB = toColor(bandColorB);
-            SkySettings.nebulaStrength = nebulaStrength[0];
-            SkySettings.nebulaScale = nebulaScale[0];
-            SkySettings.nebulaColorA = toColor(nebulaColorA);
-            SkySettings.nebulaColorB = toColor(nebulaColorB);
-            SkySettings.seed = skySeed[0];
-        }
-
         if (changed) {
             PlanetRenderer.applySettings(ambient[0], terminatorSoftness[0], sunIntensity[0], mieStrength[0]);
             PlanetRenderer.setPlanets(buildPlanets());
@@ -220,23 +167,6 @@ public class PlanetInspector extends SingleWindowInspector {
         terminatorSoftness[0] = s[1];
         sunIntensity[0] = s[2];
         mieStrength[0] = s[3];
-
-        skyShader.set(SkySettings.useShader);
-        starDensity[0] = SkySettings.starDensity;
-        starBrightness[0] = SkySettings.starBrightness;
-        starSize[0] = SkySettings.starSize;
-        twinkle[0] = SkySettings.twinkle;
-        bandStrength[0] = SkySettings.bandStrength;
-        bandWidth[0] = SkySettings.bandWidth;
-        bandTilt[0] = SkySettings.bandTilt;
-        bandRotation[0] = SkySettings.bandRotation;
-        fromColor(SkySettings.bandColorA, bandColorA);
-        fromColor(SkySettings.bandColorB, bandColorB);
-        nebulaStrength[0] = SkySettings.nebulaStrength;
-        nebulaScale[0] = SkySettings.nebulaScale;
-        fromColor(SkySettings.nebulaColorA, nebulaColorA);
-        fromColor(SkySettings.nebulaColorB, nebulaColorB);
-        skySeed[0] = SkySettings.seed;
 
         planets.clear();
         for (PlanetRenderer.Planet planet : PlanetRenderer.getPlanets()) {
@@ -279,7 +209,11 @@ public class PlanetInspector extends SingleWindowInspector {
                     e.density[0],
                     e.brightness[0],
                     clouds,
-                    e.appliedDimension
+                    e.appliedDimension,
+                    e.appliedName,
+                    e.rotationX[0],
+                    e.rotationY[0],
+                    e.rotationZ[0]
             ));
         }
         return list;
@@ -306,6 +240,9 @@ public class PlanetInspector extends SingleWindowInspector {
         final float[] radius = new float[1];
         final float[] spin = new float[1];
         final float[] tilt = new float[1];
+        final float[] rotationX = new float[1];
+        final float[] rotationY = new float[1];
+        final float[] rotationZ = new float[1];
         final float[] shadowAngle = new float[1];
         final float[] shadowTilt = new float[1];
         final float[] atmosphereColor = new float[3];
@@ -313,6 +250,9 @@ public class PlanetInspector extends SingleWindowInspector {
         final float[] height = new float[1];
         final float[] density = new float[1];
         final float[] brightness = new float[1];
+
+        final ImString name = new ImString(64);
+        String appliedName = "";
 
         final ImString dimension = new ImString(128);
         String appliedDimension = "";
@@ -335,6 +275,9 @@ public class PlanetInspector extends SingleWindowInspector {
             e.radius[0] = p.radius();
             e.spin[0] = p.spinDegPerTick();
             e.tilt[0] = p.axialTiltDeg();
+            e.rotationX[0] = p.rotationX();
+            e.rotationY[0] = p.rotationY();
+            e.rotationZ[0] = p.rotationZ();
             e.shadowAngle[0] = p.shadowAngleDeg();
             e.shadowTilt[0] = p.shadowTiltDeg();
             fromColor(p.atmosphereColor(), e.atmosphereColor);
@@ -342,6 +285,9 @@ public class PlanetInspector extends SingleWindowInspector {
             e.height[0] = p.atmosphereHeight();
             e.density[0] = p.atmosphereDensity();
             e.brightness[0] = p.atmosphereBrightness();
+
+            e.appliedName = p.name() == null ? "" : p.name();
+            e.name.set(e.appliedName);
 
             e.appliedDimension = p.dimension() == null ? "" : p.dimension();
             e.dimension.set(e.appliedDimension);
