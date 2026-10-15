@@ -4,6 +4,7 @@ import com.spacetrek.ModBlockEntities;
 import com.spacetrek.ModBlocks;
 import com.spacetrek.ModDimensions;
 import com.spacetrek.ModFluids;
+import com.spacetrek.ModMenuTypes;
 import foundry.veil.platform.VeilEventPlatform;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
@@ -11,6 +12,7 @@ import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.client.render.fluid.v1.SimpleFluidRenderHandler;
 import net.fabricmc.fabric.api.client.rendering.v1.DimensionRenderingRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 
@@ -46,6 +48,7 @@ public class SpaceTrekClient implements ClientModInitializer {
 
 		BlockEntityRenderers.register(ModBlockEntities.FUEL_TANK, FuelTankBlockEntityRenderer::new);
 		BlockEntityRenderers.register(ModBlockEntities.INTAKE, IntakeBlockEntityRenderer::new);
+		MenuScreens.register(ModMenuTypes.INTAKE, IntakeScreen::new);
 
 		HudRenderCallback.EVENT.register((gui, deltaTracker) ->
 				FuelTankHud.render(gui, deltaTracker.getGameTimeDeltaPartialTick(true))
