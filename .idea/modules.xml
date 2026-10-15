@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/space-trek.iml" filepath="$PROJECT_DIR$/.idea/space-trek.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/space-trek.client.iml" filepath="$PROJECT_DIR$/.idea/modules/space-trek.client.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/space-trek.main.iml" filepath="$PROJECT_DIR$/.idea/modules/space-trek.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/space-trek.test.iml" filepath="$PROJECT_DIR$/.idea/modules/space-trek.test.iml" />
     </modules>
   </component>
 </project>

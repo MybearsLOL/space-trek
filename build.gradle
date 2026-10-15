@@ -7,6 +7,7 @@ version = project.mod_version
 group = project.maven_group
 
 repositories {
+	mavenCentral()
 	maven {
 		name = 'BlameJared Maven'
 		url = 'https://maven.blamejared.com'
@@ -20,6 +21,17 @@ repositories {
 		}
 		filter {
 			includeGroup "maven.modrinth"
+		}
+	}
+	exclusiveContent {
+		forRepository {
+			maven {
+				name = "RyanHCode Maven"
+				url = "https://maven.ryanhcode.dev/releases"
+			}
+		}
+		filter {
+			includeGroup "foundry.imguimc"
 		}
 	}
 }
@@ -41,10 +53,17 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
-	modImplementation("foundry.veil:veil-fabric-1.21.1:4.2.1") {
+	modImplementation("foundry.veil:veil-fabric-1.21.1:4.5.2") {
 		exclude group: "maven.modrinth"
 		exclude group: "me.fallenbreath"
 	}
+
+	// ImGuiMC: only needed to COMPILE the Planet Editor window.
+	// At runtime the ImGuiMC jar in run/mods is used (do not add it a second time).
+	modClientCompileOnly "foundry.imguimc:imguimc-fabric-1.21.1:2.0.5"
+
+	// If the build says "package imgui does not exist", remove the two slashes in front of this line:
+	// clientCompileOnly "io.github.spair:imgui-java-binding:1.90.0"
 }
 
 processResources {
