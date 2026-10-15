@@ -1,5 +1,6 @@
 package com.spacetrek;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -19,20 +20,22 @@ public class IntakeMenu extends AbstractContainerMenu {
     private static final int HOTBAR_START = 28;
     private static final int SLOT_END = 37;
 
+    private final BlockPos pos;
     private final Container fuel;
     private final ContainerData data;
     private final ContainerLevelAccess access;
 
-    public IntakeMenu(int containerId, Inventory inventory) {
-        this(containerId, inventory, new SimpleContainer(1),
+    public IntakeMenu(int containerId, Inventory inventory, BlockPos pos) {
+        this(containerId, inventory, pos, new SimpleContainer(1),
                 new SimpleContainerData(IntakeBlockEntity.DATA_COUNT), ContainerLevelAccess.NULL);
     }
 
-    public IntakeMenu(int containerId, Inventory inventory, Container fuel, ContainerData data,
+    public IntakeMenu(int containerId, Inventory inventory, BlockPos pos, Container fuel, ContainerData data,
                       ContainerLevelAccess access) {
         super(ModMenuTypes.INTAKE, containerId);
         checkContainerSize(fuel, 1);
         checkContainerDataCount(data, IntakeBlockEntity.DATA_COUNT);
+        this.pos = pos;
         this.fuel = fuel;
         this.data = data;
         this.access = access;
@@ -54,6 +57,10 @@ public class IntakeMenu extends AbstractContainerMenu {
         }
 
         addDataSlots(data);
+    }
+
+    public BlockPos getPos() {
+        return pos;
     }
 
     public int getBurnTime() {

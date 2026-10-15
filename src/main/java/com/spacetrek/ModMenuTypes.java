@@ -12,7 +12,7 @@ public class ModMenuTypes {
             BuiltInRegistries.MENU,
             SpaceTrek.id("intake"),
             new ExtendedScreenHandlerType<IntakeMenu, BlockPos>(
-                    (syncId, inventory, pos) -> new IntakeMenu(syncId, inventory),
+                    (syncId, inventory, pos) -> new IntakeMenu(syncId, inventory, pos),
                     BlockPos.STREAM_CODEC)
     );
 

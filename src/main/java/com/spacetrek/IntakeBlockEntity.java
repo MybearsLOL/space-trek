@@ -237,7 +237,7 @@ public class IntakeBlockEntity extends BlockEntity implements ExtendedScreenHand
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int containerId, Inventory inventory, Player player) {
-        return new IntakeMenu(containerId, inventory, fuelSlot, dataAccess,
+        return new IntakeMenu(containerId, inventory, worldPosition, fuelSlot, dataAccess,
                 ContainerLevelAccess.create(level, worldPosition));
     }
 

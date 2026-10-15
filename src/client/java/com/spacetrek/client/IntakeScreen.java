@@ -1,5 +1,7 @@
 package com.spacetrek.client;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import com.spacetrek.IntakeBlockEntity;
 import com.spacetrek.IntakeMenu;
 import java.util.Locale;
@@ -8,6 +10,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 public class IntakeScreen extends AbstractContainerScreen<IntakeMenu> {
 
@@ -20,6 +23,11 @@ public class IntakeScreen extends AbstractContainerScreen<IntakeMenu> {
     private static final int FLAME_Y = 34;
     private static final int FLAME_WIDTH = 12;
     private static final int FLAME_HEIGHT = 14;
+
+    private static final int FAN_CENTER_X = 24;
+    private static final int FAN_CENTER_Y = 48;
+    private static final int FAN_HALF_SIZE = 12;
+    private static final int FAN_BLADE_COUNT = 4;
 
     private static final int BUCKET_COUNT = IntakeBlockEntity.MAX_OXYGEN / IntakeBlockEntity.BUCKET_AMOUNT;
 
@@ -35,7 +43,8 @@ public class IntakeScreen extends AbstractContainerScreen<IntakeMenu> {
         int barLeft = leftPos + BAR_X;
         int barTop = topPos + BAR_Y;
         if (mouseX >= barLeft && mouseX < barLeft + BAR_WIDTH && mouseY >= barTop && mouseY < barTop + BAR_HEIGHT) {
-            graphics.renderTooltip(font, oxygenText(), mouseX, mouseY);
+            graphics.renderTooltip(font, Component.translatable("gui.space-trek.intake.oxygen",
+                    bucketAmount(), BUCKET_COUNT), mouseX, mouseY);
         }
     }
 
@@ -56,8 +65,42 @@ public class IntakeScreen extends AbstractContainerScreen<IntakeMenu> {
             graphics.fill(sx, sy, sx + 16, sy + 16, 0xFF8B8B8B);
         }
 
+        renderFan(graphics, x + FAN_CENTER_X, y + FAN_CENTER_Y, partialTick);
         renderFlame(graphics, x + FLAME_X, y + FLAME_Y);
         renderOxygenBar(graphics, x + BAR_X, y + BAR_Y);
+    }
+
+    private void renderFan(GuiGraphics graphics, int cx, int cy, float partialTick) {
+        graphics.fill(cx - FAN_HALF_SIZE - 1, cy - FAN_HALF_SIZE - 1,
+                cx + FAN_HALF_SIZE + 1, cy + FAN_HALF_SIZE + 1, 0xFF373737);
+        graphics.fill(cx - FAN_HALF_SIZE, cy - FAN_HALF_SIZE,
+                cx + FAN_HALF_SIZE, cy + FAN_HALF_SIZE, 0xFF1B1B1B);
+
+        PoseStack pose = graphics.pose();
+        pose.pushPose();
+        pose.translate(cx, cy, 0);
+        pose.mulPose(Axis.ZP.rotationDegrees(-currentFanAngle(partialTick)));
+
+        for (int i = 0; i < FAN_BLADE_COUNT; i++) {
+            pose.pushPose();
+            pose.mulPose(Axis.ZP.rotationDegrees(i * (360f / FAN_BLADE_COUNT)));
+            graphics.fill(-3, -10, 0, -2, 0xFF8F8F8F);
+            graphics.fill(0, -10, 3, -2, 0xFFC4C4C4);
+            pose.popPose();
+        }
+
+        graphics.fill(-3, -3, 3, 3, 0xFF4A4A4A);
+        graphics.fill(-1, -1, 1, 1, 0xFFA0A0A0);
+        pose.popPose();
+    }
+
+    private float currentFanAngle(float partialTick) {
+        if (minecraft == null || minecraft.level == null) return 0f;
+        BlockEntity be = minecraft.level.getBlockEntity(menu.getPos());
+        if (be instanceof IntakeBlockEntity intake) {
+            return intake.getFanAngle(partialTick);
+        }
+        return 0f;
     }
 
     private void renderFlame(GuiGraphics graphics, int fx, int fy) {
@@ -94,11 +137,11 @@ public class IntakeScreen extends AbstractContainerScreen<IntakeMenu> {
     @Override
     protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
         super.renderLabels(graphics, mouseX, mouseY);
-        graphics.drawString(font, oxygenText(), BAR_X, BAR_Y + BAR_HEIGHT + 5, 0x404040, false);
+        Component amount = Component.translatable("gui.space-trek.intake.amount", bucketAmount(), BUCKET_COUNT);
+        graphics.drawString(font, amount, BAR_X, BAR_Y + BAR_HEIGHT + 5, 0x404040, false);
     }
 
-    private Component oxygenText() {
-        String amount = String.format(Locale.ROOT, "%.1f", menu.getOxygen() / (float) IntakeBlockEntity.BUCKET_AMOUNT);
-        return Component.translatable("gui.space-trek.intake.oxygen", amount, BUCKET_COUNT);
+    private String bucketAmount() {
+        return String.format(Locale.ROOT, "%.1f", menu.getOxygen() / (float) IntakeBlockEntity.BUCKET_AMOUNT);
     }
 }
