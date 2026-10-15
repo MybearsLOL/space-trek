@@ -3,6 +3,7 @@ package com.spacetrek.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import com.spacetrek.IntakeBlock;
 import com.spacetrek.IntakeBlockEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -19,8 +20,8 @@ public class IntakeBlockEntityRenderer implements BlockEntityRenderer<IntakeBloc
             ResourceLocation.fromNamespaceAndPath("space-trek", "block/intake");
 
     private static final float CENTER_X = 8f / 16f;
-    private static final float CENTER_Y = 9f / 16f;
-    private static final float CENTER_Z = 8f / 16f;
+    private static final float CENTER_Y = 8f / 16f;
+    private static final float CENTER_Z = 6f / 16f;
 
     private static final int BLADE_COUNT = 4;
     private static final float HUB_HALF_SIZE = 1f / 16f;
@@ -52,7 +53,12 @@ public class IntakeBlockEntityRenderer implements BlockEntityRenderer<IntakeBloc
 
         VertexConsumer vc = bufferSource.getBuffer(RenderType.entityCutoutNoCull(TextureAtlas.LOCATION_BLOCKS));
 
+        float facingRotation = -entity.getBlockState().getValue(IntakeBlock.FACING).toYRot() - 180f;
+
         poseStack.pushPose();
+        poseStack.translate(0.5, 0.0, 0.5);
+        poseStack.mulPose(Axis.YP.rotationDegrees(facingRotation));
+        poseStack.translate(-0.5, 0.0, -0.5);
         poseStack.translate(CENTER_X, CENTER_Y, CENTER_Z);
         poseStack.mulPose(Axis.ZP.rotationDegrees(angle));
 

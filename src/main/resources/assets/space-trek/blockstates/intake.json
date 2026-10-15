@@ -1,5 +1,19 @@
 {
   "variants": {
-    "": { "model": "space-trek:block/intake" }
+    "facing=north": {
+      "model": "space-trek:block/intake"
+    },
+    "facing=east": {
+      "model": "space-trek:block/intake",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "space-trek:block/intake",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "space-trek:block/intake",
+      "y": 270
+    }
   }
 }
