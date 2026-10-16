@@ -18,8 +18,31 @@ public final class DimensionSky {
     /** Planet this dimension is on (its key, see PlanetRenderer.planetKey). Empty = none. */
     public String homePlanet = "";
 
-    /** Other planets that can be seen in this dimension's sky (keys). */
-    public List<String> planets = new ArrayList<>();
+    /** Other planets / moons that can be seen in this dimension's sky. */
+    public List<SkyBody> planets = new ArrayList<>();
+
+    /** How one planet or moon shows up in this sky. */
+    public static final class SkyBody {
+        /** Planet key (its name, or "planet1", "planet2"... if unnamed). */
+        public String key = "";
+        /** 0 = invisible, 1 = fully visible. */
+        public float opacity = 1.0f;
+        /** true = still seen in the daytime, on top of the atmosphere glow (for example just the moon). */
+        public boolean visibleInDay = false;
+
+        public SkyBody() {
+        }
+
+        public SkyBody(String key, float opacity, boolean visibleInDay) {
+            this.key = key;
+            this.opacity = opacity;
+            this.visibleInDay = visibleInDay;
+        }
+
+        public SkyBody copy() {
+            return new SkyBody(key, opacity, visibleInDay);
+        }
+    }
 
     /** Tilt of the sky's turning axis in degrees. 0 = the vanilla east-west sun path. */
     public float poleTilt = 0.0f;
@@ -46,7 +69,10 @@ public final class DimensionSky {
         c.dimension = dimension;
         c.enabled = enabled;
         c.homePlanet = homePlanet;
-        c.planets = new ArrayList<>(planets);
+        c.planets = new ArrayList<>();
+        for (SkyBody body : planets) {
+            c.planets.add(body.copy());
+        }
         c.poleTilt = poleTilt;
         c.atmosphereColor = atmosphereColor;
         c.horizonColor = horizonColor;

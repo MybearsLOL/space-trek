@@ -141,8 +141,14 @@ public class SkyInspector extends SingleWindowInspector {
                         continue;
                     }
                     any = true;
-                    ImBoolean flag = e.visible.computeIfAbsent(key, k -> new ImBoolean(false));
-                    skiesChanged |= ImGui.checkbox(key, flag);
+                    EditableBody body = e.visible.computeIfAbsent(key, k -> new EditableBody());
+                    skiesChanged |= ImGui.checkbox(key, body.visible);
+                    if (body.visible.get()) {
+                        ImGui.pushID(key);
+                        skiesChanged |= ImGui.sliderFloat("   opacity", body.opacity, 0.0f, 1.0f);
+                        skiesChanged |= ImGui.checkbox("   still seen in the day", body.day);
+                        ImGui.popID();
+                    }
                 }
                 if (!any) {
                     ImGui.text("(no other planets exist - add them in the Planet Editor)");
@@ -260,9 +266,10 @@ public class SkyInspector extends SingleWindowInspector {
             sky.dimension = e.appliedDimension;
             sky.enabled = e.enabled.get();
             sky.homePlanet = e.homePlanet;
-            for (Map.Entry<String, ImBoolean> entry : e.visible.entrySet()) {
-                if (entry.getValue().get() && !entry.getKey().equals(e.homePlanet)) {
-                    sky.planets.add(entry.getKey());
+            for (Map.Entry<String, EditableBody> entry : e.visible.entrySet()) {
+                EditableBody body = entry.getValue();
+                if (body.visible.get() && !entry.getKey().equals(e.homePlanet)) {
+                    sky.planets.add(new DimensionSky.SkyBody(entry.getKey(), body.opacity[0], body.day.get()));
                 }
             }
             sky.poleTilt = e.poleTilt[0];
@@ -293,13 +300,20 @@ public class SkyInspector extends SingleWindowInspector {
         rgb[2] = (color & 0xFF) / 255.0f;
     }
 
+    /** One planet or moon as it shows in a sky. */
+    private static final class EditableBody {
+        final ImBoolean visible = new ImBoolean(false);
+        final float[] opacity = new float[]{1.0f};
+        final ImBoolean day = new ImBoolean(false);
+    }
+
     /** One dimension's sky in the form ImGui widgets need. */
     private static final class EditableSky {
         final ImString dimension = new ImString(128);
         String appliedDimension = "";
         final ImBoolean enabled = new ImBoolean(true);
         String homePlanet = "";
-        final Map<String, ImBoolean> visible = new LinkedHashMap<>();
+        final Map<String, EditableBody> visible = new LinkedHashMap<>();
         final float[] poleTilt = new float[1];
         final float[] atmosphereColor = new float[3];
         final float[] horizonColor = new float[3];
@@ -317,8 +331,12 @@ public class SkyInspector extends SingleWindowInspector {
             e.dimension.set(sky.dimension);
             e.enabled.set(sky.enabled);
             e.homePlanet = sky.homePlanet;
-            for (String key : sky.planets) {
-                e.visible.put(key, new ImBoolean(true));
+            for (DimensionSky.SkyBody body : sky.planets) {
+                EditableBody editable = new EditableBody();
+                editable.visible.set(true);
+                editable.opacity[0] = body.opacity;
+                editable.day.set(body.visibleInDay);
+                e.visible.put(body.key, editable);
             }
             e.poleTilt[0] = sky.poleTilt;
             fromColor(sky.atmosphereColor, e.atmosphereColor);

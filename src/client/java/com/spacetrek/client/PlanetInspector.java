@@ -53,6 +53,13 @@ public class PlanetInspector extends SingleWindowInspector {
             loadFromRenderer();
         }
 
+        // The keys the other planets go by (name, or "planet1", "planet2"... if unnamed)
+        List<String> keys = new ArrayList<>();
+        for (int i = 0; i < planets.size(); i++) {
+            String name = planets.get(i).appliedName;
+            keys.add(name.isEmpty() ? "planet" + (i + 1) : name);
+        }
+
         boolean changed = false;
 
         if (ImGui.collapsingHeader("Global settings", ImGuiTreeNodeFlags.DefaultOpen)) {
@@ -86,6 +93,35 @@ public class PlanetInspector extends SingleWindowInspector {
                 changed |= ImGui.sliderFloat("Rotation X (pitch)", p.rotationX, -180.0f, 180.0f);
                 changed |= ImGui.sliderFloat("Rotation Y (which side faces you)", p.rotationY, -180.0f, 180.0f);
                 changed |= ImGui.sliderFloat("Rotation Z (roll)", p.rotationZ, -180.0f, 180.0f);
+
+                ImGui.separator();
+                ImGui.text("Orbit (a planet with no orbit stands still)");
+                String parentPreview = p.orbitParent.isEmpty() ? "(none - stands still)" : p.orbitParent;
+                if (ImGui.beginCombo("Orbits around", parentPreview)) {
+                    if (ImGui.selectable("(none - stands still)", p.orbitParent.isEmpty())) {
+                        p.orbitParent = "";
+                        changed = true;
+                    }
+                    for (int k = 0; k < keys.size(); k++) {
+                        if (k == i) {
+                            continue;
+                        }
+                        String key = keys.get(k);
+                        if (ImGui.selectable(key, key.equals(p.orbitParent))) {
+                            p.orbitParent = key;
+                            changed = true;
+                        }
+                    }
+                    ImGui.endCombo();
+                }
+                if (!p.orbitParent.isEmpty()) {
+                    changed |= ImGui.dragFloat("Orbit distance (blocks)", p.orbitRadius, 10.0f, 1.0f, 10000000.0f);
+                    changed |= ImGui.dragFloat("One orbit takes (ticks, 24000 = 1 day)", p.orbitPeriod, 100.0f, 1.0f, 100000000.0f);
+                    changed |= ImGui.sliderFloat("Orbit tilt", p.orbitInclination, -90.0f, 90.0f);
+                    changed |= ImGui.sliderFloat("Orbit tilt direction", p.orbitNode, 0.0f, 360.0f);
+                    changed |= ImGui.sliderFloat("Starting point on orbit", p.orbitPhase, 0.0f, 360.0f);
+                    ImGui.text("While orbiting, the Position x y z above is ignored.");
+                }
 
                 ImGui.separator();
                 changed |= ImGui.sliderFloat("Shadow angle", p.shadowAngle, 0.0f, 360.0f);
@@ -213,7 +249,10 @@ public class PlanetInspector extends SingleWindowInspector {
                     e.appliedName,
                     e.rotationX[0],
                     e.rotationY[0],
-                    e.rotationZ[0]
+                    e.rotationZ[0],
+                    e.orbitParent.isEmpty() ? null : new PlanetRenderer.Orbit(
+                            e.orbitParent, e.orbitRadius[0], e.orbitPeriod[0],
+                            e.orbitInclination[0], e.orbitNode[0], e.orbitPhase[0])
             ));
         }
         return list;
@@ -243,6 +282,13 @@ public class PlanetInspector extends SingleWindowInspector {
         final float[] rotationX = new float[1];
         final float[] rotationY = new float[1];
         final float[] rotationZ = new float[1];
+
+        String orbitParent = "";
+        final float[] orbitRadius = new float[]{5000.0f};
+        final float[] orbitPeriod = new float[]{24000.0f};
+        final float[] orbitInclination = new float[1];
+        final float[] orbitNode = new float[1];
+        final float[] orbitPhase = new float[1];
         final float[] shadowAngle = new float[1];
         final float[] shadowTilt = new float[1];
         final float[] atmosphereColor = new float[3];
@@ -278,6 +324,16 @@ public class PlanetInspector extends SingleWindowInspector {
             e.rotationX[0] = p.rotationX();
             e.rotationY[0] = p.rotationY();
             e.rotationZ[0] = p.rotationZ();
+
+            PlanetRenderer.Orbit orbit = p.orbit();
+            if (orbit != null && orbit.parent() != null) {
+                e.orbitParent = orbit.parent();
+                e.orbitRadius[0] = orbit.radius();
+                e.orbitPeriod[0] = orbit.periodTicks();
+                e.orbitInclination[0] = orbit.inclination();
+                e.orbitNode[0] = orbit.node();
+                e.orbitPhase[0] = orbit.phase();
+            }
             e.shadowAngle[0] = p.shadowAngleDeg();
             e.shadowTilt[0] = p.shadowTiltDeg();
             fromColor(p.atmosphereColor(), e.atmosphereColor);

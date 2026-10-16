@@ -246,9 +246,10 @@ public class ModDimensions {
         if (gate != null) {
             double altitude = Math.max(0.0, y - HOME_SURFACE_Y);
             Vec3 offset = PlanetGates.capOffset(x, z, gate.radius() + altitude);
-            x = gate.x() + offset.x;
-            y = gate.y() + offset.y;
-            z = gate.z() + offset.z;
+            Vec3 center = gate.center(player.level().getGameTime());
+            x = center.x + offset.x;
+            y = center.y + offset.y;
+            z = center.z + offset.z;
         } else if (player.level().dimension() != Level.OVERWORLD) {
             return false;
         }
@@ -267,9 +268,10 @@ public class ModDimensions {
         double arrivalY = SPACE_TRANSITION_END_Y - ARRIVAL_MARGIN;
 
         for (PlanetGates.Gate gate : PlanetGates.gates()) {
-            double ox = player.getX() - gate.x();
-            double oy = player.getY() - gate.y();
-            double oz = player.getZ() - gate.z();
+            Vec3 center = gate.center(player.level().getGameTime());
+            double ox = player.getX() - center.x;
+            double oy = player.getY() - center.y;
+            double oz = player.getZ() - center.z;
             double entryDistance = gate.radius() + (arrivalY - HOME_SURFACE_Y);
 
             // Only from the upper half of the planet (that is the half the dimension maps onto)

@@ -79,6 +79,17 @@ public class PlanetConfig {
             o.addProperty("atmosphereDensity", p.atmosphereDensity());
             o.addProperty("atmosphereBrightness", p.atmosphereBrightness());
             o.addProperty("dimension", p.dimension() == null ? "" : p.dimension());
+            PlanetRenderer.Orbit orbit = p.orbit();
+            if (orbit != null && orbit.parent() != null && !orbit.parent().isEmpty()) {
+                JsonObject b = new JsonObject();
+                b.addProperty("parent", orbit.parent());
+                b.addProperty("radius", orbit.radius());
+                b.addProperty("periodTicks", orbit.periodTicks());
+                b.addProperty("inclination", orbit.inclination());
+                b.addProperty("node", orbit.node());
+                b.addProperty("phase", orbit.phase());
+                o.add("orbit", b);
+            }
             PlanetRenderer.Clouds clouds = p.clouds();
             if (clouds != null) {
                 JsonObject c = new JsonObject();
@@ -222,6 +233,22 @@ public class PlanetConfig {
             );
         }
 
+        PlanetRenderer.Orbit orbit = null;
+        if (o.has("orbit") && o.get("orbit").isJsonObject()) {
+            JsonObject b = o.getAsJsonObject("orbit");
+            String parent = getString(b, "parent", "").trim();
+            if (!parent.isEmpty()) {
+                orbit = new PlanetRenderer.Orbit(
+                        parent,
+                        getFloat(b, "radius", 5000.0f),
+                        getFloat(b, "periodTicks", 24000.0f),
+                        getFloat(b, "inclination", 0.0f),
+                        getFloat(b, "node", 0.0f),
+                        getFloat(b, "phase", 0.0f)
+                );
+            }
+        }
+
         return new PlanetRenderer.Planet(
                 ResourceLocation.parse(getString(o, "texture", "space-trek:textures/planet/example_planet.png")),
                 getDouble(o, "x", 0.0),
@@ -242,7 +269,8 @@ public class PlanetConfig {
                 getString(o, "name", "").trim(),
                 getFloat(o, "rotationX", 0.0f),
                 getFloat(o, "rotationY", 0.0f),
-                getFloat(o, "rotationZ", 0.0f)
+                getFloat(o, "rotationZ", 0.0f),
+                orbit
         );
     }
 

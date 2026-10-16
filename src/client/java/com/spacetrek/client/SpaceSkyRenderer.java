@@ -138,29 +138,37 @@ public class SpaceSkyRenderer implements DimensionRenderingRegistry.SkyRenderer 
         if (home != null) {
             double altitude = Math.max(0.0, cameraPos.y - ModDimensions.HOME_SURFACE_Y);
             Vec3 offset = PlanetGates.capOffset(cameraPos.x, cameraPos.z, home.radius() + altitude);
-            viewPosition = new Vec3(home.x() + offset.x, home.y() + offset.y, home.z() + offset.z);
+            viewPosition = PlanetRenderer.positionOf(home).add(offset);
         }
 
-        List<PlanetRenderer.Planet> list = new ArrayList<>();
-        List<Float> fades = new ArrayList<>();
+        // Bodies that the day sky covers (drawn before the glow) and bodies that stay visible in
+        // the day (drawn after it, on top of the glow)
+        List<PlanetRenderer.Planet> behind = new ArrayList<>();
+        List<Float> behindAlpha = new ArrayList<>();
+        List<PlanetRenderer.Planet> inFront = new ArrayList<>();
+        List<Float> inFrontAlpha = new ArrayList<>();
+
         if (home != null) {
             // The planet we stand on only shows when climbing out of the atmosphere
-            list.add(home);
-            fades.add(smoothstep((float) ModDimensions.SPACE_TRANSITION_START_Y,
+            behind.add(home);
+            behindAlpha.add(smoothstep((float) ModDimensions.SPACE_TRANSITION_START_Y,
                     (float) ModDimensions.SPACE_TRANSITION_END_Y, (float) cameraPos.y));
         }
-        for (String key : sky.planets) {
-            PlanetRenderer.Planet planet = PlanetRenderer.findPlanet(key);
-            if (planet != null && planet != home) {
-                list.add(planet);
-                fades.add(1.0f);
+        for (DimensionSky.SkyBody body : sky.planets) {
+            PlanetRenderer.Planet planet = PlanetRenderer.findPlanet(body.key);
+            if (planet == null || planet == home) {
+                continue;
+            }
+            float opacity = Math.max(0.0f, Math.min(1.0f, body.opacity));
+            if (body.visibleInDay) {
+                inFront.add(planet);
+                inFrontAlpha.add(opacity);
+            } else {
+                behind.add(planet);
+                behindAlpha.add(opacity);
             }
         }
-        float[] alphas = new float[fades.size()];
-        for (int i = 0; i < alphas.length; i++) {
-            alphas[i] = fades.get(i);
-        }
-        PlanetRenderer.renderPlanets(camera, viewPosition, celestialToWorld, list, alphas, 1.0f);
+        PlanetRenderer.renderPlanets(camera, viewPosition, celestialToWorld, behind, toArray(behindAlpha), 1.0f);
 
         // 3) atmosphere glow on top
         float glowAlpha = sky.atmosphereStrength * altitudeFactor * day;
@@ -170,7 +178,20 @@ public class SpaceSkyRenderer implements DimensionRenderingRegistry.SkyRenderer 
                     sky.atmosphereColor, sky.horizonColor, sky.twilightColor);
             drawSkyShader(camera, 1.0f, angle, axis, glow);
         }
+
+        // 4) bodies that are still seen in the day, over the glow
+        if (!inFront.isEmpty()) {
+            PlanetRenderer.renderPlanets(camera, viewPosition, celestialToWorld, inFront, toArray(inFrontAlpha), 1.0f);
+        }
         return true;
+    }
+
+    private static float[] toArray(List<Float> list) {
+        float[] array = new float[list.size()];
+        for (int i = 0; i < array.length; i++) {
+            array[i] = list.get(i);
+        }
+        return array;
     }
 
     private static boolean isSkyShaderReady() {
@@ -231,7 +252,8 @@ public class SpaceSkyRenderer implements DimensionRenderingRegistry.SkyRenderer 
         if (home != null) {
             double altitude = Math.max(0.0, cameraPos.y - ModDimensions.HOME_SURFACE_Y);
             Vec3 offset = PlanetGates.capOffset(cameraPos.x, cameraPos.z, home.radius() + altitude);
-            viewPosition = new Vec3(home.x() + offset.x, home.y() + offset.y, home.z() + offset.z);
+            Vec3 center = PlanetRenderer.positionOf(home);
+            viewPosition = center.add(offset);
         }
         PlanetRenderer.render(camera, alpha, viewPosition);
     }

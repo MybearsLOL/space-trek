@@ -15,6 +15,7 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.resources.ResourceLocation;
+import com.spacetrek.PlanetGates;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
@@ -145,6 +146,21 @@ public class PlanetRenderer {
      * useAlpha      - true: the PNG has a transparent background.
      *                 false: the image is black where there are no clouds (no alpha channel needed)
      */
+    /**
+     * Makes a planet or moon move around another one. A planet WITHOUT an orbit stands still
+     * at its x / y / z. With an orbit, its x / y / z are ignored and it circles its parent.
+     *
+     * parent      - key of the body to circle (its name, or "planet1", "planet2"... if unnamed)
+     * radius      - distance from the parent's centre, in blocks
+     * periodTicks - game ticks for one full lap (24000 = one Minecraft day)
+     * inclination - tilt of the orbit in degrees (0 = flat, level with the ground)
+     * node        - turns the direction of that tilt around the vertical axis, in degrees
+     * phase       - where on the orbit it starts, in degrees
+     */
+    public record Orbit(String parent, float radius, float periodTicks,
+                        float inclination, float node, float phase) {
+    }
+
     public record Clouds(ResourceLocation texture,
                          float altitude,
                          float opacity,
@@ -176,7 +192,8 @@ public class PlanetRenderer {
                          String name,
                          float rotationX,
                          float rotationY,
-                         float rotationZ) {
+                         float rotationZ,
+                         Orbit orbit) {
 
         /** Planet without clouds (keeps the older 13-value constructor working). */
         public Planet(ResourceLocation texture,
@@ -192,7 +209,7 @@ public class PlanetRenderer {
                       float atmosphereDensity,
                       float atmosphereBrightness) {
             this(texture, x, y, z, radius, spinDegPerTick, axialTiltDeg, shadowAngleDeg, shadowTiltDeg,
-                    atmosphereColor, twilightColor, atmosphereHeight, atmosphereDensity, atmosphereBrightness, null, "", "", 0.0f, 0.0f, 0.0f);
+                    atmosphereColor, twilightColor, atmosphereHeight, atmosphereDensity, atmosphereBrightness, null, "", "", 0.0f, 0.0f, 0.0f, null);
         }
 
         /**
@@ -284,6 +301,33 @@ public class PlanetRenderer {
     }
 
     /**
+     * Where a planet's centre is right now. Planets without an orbit stand still at their x / y / z;
+     * orbiting ones circle their parent (which may itself orbit something).
+     */
+    public static Vec3 positionOf(Planet planet) {
+        return positionOf(planet, planets, 0);
+    }
+
+    private static Vec3 positionOf(Planet planet, List<Planet> all, int depth) {
+        Orbit orbit = planet.orbit();
+        if (orbit == null || orbit.parent() == null || orbit.parent().isEmpty() || depth > 8) {
+            return new Vec3(planet.x(), planet.y(), planet.z());
+        }
+        for (int i = 0; i < all.size(); i++) {
+            Planet other = all.get(i);
+            if (other != planet && planetKey(other, i).equals(orbit.parent())) {
+                Minecraft minecraft = Minecraft.getInstance();
+                double gameTime = minecraft.level != null ? minecraft.level.getGameTime() : 0.0;
+                return positionOf(other, all, depth + 1).add(PlanetGates.orbitOffset(
+                        orbit.radius(), orbit.periodTicks(), orbit.inclination(),
+                        orbit.node(), orbit.phase(), gameTime));
+            }
+        }
+        // Parent not found: stand still
+        return new Vec3(planet.x(), planet.y(), planet.z());
+    }
+
+    /**
      * The name the sky editor uses for a planet: its name, or "planet1", "planet2"... if it has none.
      */
     public static String planetKey(Planet planet, int index) {
@@ -368,9 +412,10 @@ public class PlanetRenderer {
     private static void drawPlanet(Planet planet, Vec3 camPos, Quaternionf inverseCamRot,
                                    float maxDrawDist, double ticks, boolean raymarch) {
 
-        double dx = planet.x() - camPos.x;
-        double dy = planet.y() - camPos.y;
-        double dz = planet.z() - camPos.z;
+        Vec3 position = positionOf(planet);
+        double dx = position.x - camPos.x;
+        double dy = position.y - camPos.y;
+        double dz = position.z - camPos.z;
         double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
         // Camera is inside the planet - nothing sensible to draw

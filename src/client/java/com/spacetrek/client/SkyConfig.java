@@ -178,8 +178,12 @@ public class SkyConfig {
             o.addProperty("enabled", sky.enabled);
             o.addProperty("homePlanet", sky.homePlanet);
             JsonArray planets = new JsonArray();
-            for (String key : sky.planets) {
-                planets.add(key);
+            for (DimensionSky.SkyBody body : sky.planets) {
+                JsonObject b = new JsonObject();
+                b.addProperty("name", body.key);
+                b.addProperty("opacity", body.opacity);
+                b.addProperty("visibleInDay", body.visibleInDay);
+                planets.add(b);
             }
             o.add("planets", planets);
             o.addProperty("poleTilt", sky.poleTilt);
@@ -217,9 +221,17 @@ public class SkyConfig {
         sky.homePlanet = getString(o, "homePlanet", "").trim();
         if (o.has("planets")) {
             for (JsonElement element : o.getAsJsonArray("planets")) {
-                String key = element.getAsString().trim();
-                if (!key.isEmpty()) {
-                    sky.planets.add(key);
+                DimensionSky.SkyBody body = new DimensionSky.SkyBody();
+                if (element.isJsonObject()) {
+                    JsonObject b = element.getAsJsonObject();
+                    body.key = getString(b, "name", "").trim();
+                    body.opacity = getFloat(b, "opacity", 1.0f);
+                    body.visibleInDay = b.has("visibleInDay") && b.get("visibleInDay").getAsBoolean();
+                } else {
+                    body.key = element.getAsString().trim(); // plain name: default look
+                }
+                if (!body.key.isEmpty()) {
+                    sky.planets.add(body);
                 }
             }
         }
