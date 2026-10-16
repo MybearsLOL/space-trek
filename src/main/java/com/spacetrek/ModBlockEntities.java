@@ -20,5 +20,17 @@ public class ModBlockEntities {
                     FabricBlockEntityTypeBuilder.create(IntakeBlockEntity::new,
                             ModBlocks.INTAKE_BLOCK).build());
 
+    public static final BlockEntityType<KeroseneDistillerBlockEntity> KEROSENE_DISTILLER =
+            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
+                    ResourceLocation.fromNamespaceAndPath("space-trek", "kerosene_distiller"),
+                    FabricBlockEntityTypeBuilder.create(KeroseneDistillerBlockEntity::new,
+                            ModBlocks.KEROSENE_DISTILLER_BLOCK).build());
+
+    public static final BlockEntityType<FuelSynthesizerBlockEntity> FUEL_SYNTHESIZER =
+            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
+                    ResourceLocation.fromNamespaceAndPath("space-trek", "fuel_synthesizer"),
+                    FabricBlockEntityTypeBuilder.create(FuelSynthesizerBlockEntity::new,
+                            ModBlocks.FUEL_SYNTHESIZER_BLOCK).build());
+
     public static void initialize() {}
 }

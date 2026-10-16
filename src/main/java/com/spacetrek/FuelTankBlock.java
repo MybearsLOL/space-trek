@@ -163,6 +163,7 @@ public class FuelTankBlock extends Block implements EntityBlock {
         if (stack.is(Items.WATER_BUCKET)) return FuelTankBlockEntity.FluidType.WATER;
         if (stack.is(ModItems.ROCKET_FUEL_BUCKET)) return FuelTankBlockEntity.FluidType.ROCKET_FUEL;
         if (stack.is(ModItems.OXYGEN_BUCKET)) return FuelTankBlockEntity.FluidType.OXYGEN;
+        if (stack.is(ModItems.KEROSENE_BUCKET)) return FuelTankBlockEntity.FluidType.KEROSENE;
         return null;
     }
 }

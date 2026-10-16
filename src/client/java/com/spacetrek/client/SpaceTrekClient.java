@@ -43,16 +43,34 @@ public class SpaceTrekClient implements ClientModInitializer {
 				ModFluids.OXYGEN_FLOWING
 		);
 
+		// Kerosene
+		FluidRenderHandlerRegistry.INSTANCE.register(
+				ModFluids.KEROSENE_SOURCE,
+				ModFluids.KEROSENE_FLOWING,
+				SimpleFluidRenderHandler.coloredWater(0xD42B2B)
+		);
+		BlockRenderLayerMap.INSTANCE.putFluids(
+				RenderType.translucent(),
+				ModFluids.KEROSENE_SOURCE,
+				ModFluids.KEROSENE_FLOWING
+		);
+
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.FUEL_TANK_BLOCK, RenderType.translucent());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.INTAKE_BLOCK, RenderType.cutout());
+
+		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.KEROSENE_DISTILLER_BLOCK, RenderType.cutout());
+		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.FUEL_SYNTHESIZER_BLOCK, RenderType.cutout());
 
 		BlockEntityRenderers.register(ModBlockEntities.FUEL_TANK, FuelTankBlockEntityRenderer::new);
 		BlockEntityRenderers.register(ModBlockEntities.INTAKE, IntakeBlockEntityRenderer::new);
 		MenuScreens.register(ModMenuTypes.INTAKE, IntakeScreen::new);
+		MenuScreens.register(ModMenuTypes.KEROSENE_DISTILLER, KeroseneDistillerScreen::new);
 
-		HudRenderCallback.EVENT.register((gui, deltaTracker) ->
-				FuelTankHud.render(gui, deltaTracker.getGameTimeDeltaPartialTick(true))
-		);
+		HudRenderCallback.EVENT.register((gui, deltaTracker) -> {
+			float partial = deltaTracker.getGameTimeDeltaPartialTick(true);
+			FuelTankHud.render(gui, partial);
+			SynthesizerHud.render(gui, partial);
+		});
 
 		// Live planet editing: edit config/space-trek-planets.json while the game runs
 		PlanetConfig.init();

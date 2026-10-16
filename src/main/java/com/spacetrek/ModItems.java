@@ -26,6 +26,13 @@ public class ModItems {
                     .stacksTo(1))
     );
 
+    public static final BucketItem KEROSENE_BUCKET = register(
+            "kerosene_bucket",
+            new BucketItem(ModFluids.KEROSENE_SOURCE, new Item.Properties()
+                    .craftRemainder(Items.BUCKET)
+                    .stacksTo(1))
+    );
+
     public static final BlockItem FUEL_TANK = register(
             "fuel_tank",
             new BlockItem(ModBlocks.FUEL_TANK_BLOCK, new Item.Properties())
@@ -34,6 +41,16 @@ public class ModItems {
     public static final BlockItem INTAKE = register(
             "intake",
             new BlockItem(ModBlocks.INTAKE_BLOCK, new Item.Properties())
+    );
+
+    public static final BlockItem KEROSENE_DISTILLER = register(
+            "kerosene_distiller",
+            new BlockItem(ModBlocks.KEROSENE_DISTILLER_BLOCK, new Item.Properties())
+    );
+
+    public static final BlockItem FUEL_SYNTHESIZER = register(
+            "fuel_synthesizer",
+            new BlockItem(ModBlocks.FUEL_SYNTHESIZER_BLOCK, new Item.Properties())
     );
 
     private static <T extends Item> T register(String name, T item) {
@@ -46,8 +63,11 @@ public class ModItems {
                 .register(entries -> {
                     entries.accept(ROCKET_FUEL_BUCKET);
                     entries.accept(OXYGEN_BUCKET);
+                    entries.accept(KEROSENE_BUCKET);
                     entries.accept(FUEL_TANK);
                     entries.accept(INTAKE);
+                    entries.accept(KEROSENE_DISTILLER);
+                    entries.accept(FUEL_SYNTHESIZER);
                 });
     }
 }

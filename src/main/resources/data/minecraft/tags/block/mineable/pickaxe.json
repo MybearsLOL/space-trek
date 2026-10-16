@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "space-trek:kerosene_distiller",
+    "space-trek:fuel_synthesizer",
+    "space-trek:intake"
+  ]
+}

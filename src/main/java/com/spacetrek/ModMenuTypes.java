@@ -16,5 +16,13 @@ public class ModMenuTypes {
                     BlockPos.STREAM_CODEC)
     );
 
+    public static final MenuType<KeroseneDistillerMenu> KEROSENE_DISTILLER = Registry.register(
+            BuiltInRegistries.MENU,
+            SpaceTrek.id("kerosene_distiller"),
+            new ExtendedScreenHandlerType<KeroseneDistillerMenu, BlockPos>(
+                    (syncId, inventory, pos) -> new KeroseneDistillerMenu(syncId, inventory, pos),
+                    BlockPos.STREAM_CODEC)
+    );
+
     public static void initialize() {}
 }

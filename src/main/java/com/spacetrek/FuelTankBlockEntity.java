@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class FuelTankBlockEntity extends BlockEntity {
 
-    public enum FluidType { EMPTY, WATER, ROCKET_FUEL, OXYGEN }
+    public enum FluidType { EMPTY, WATER, ROCKET_FUEL, OXYGEN, KEROSENE }
 
     public static final int MB_PER_BUCKET = 1000;
     public static final int BLOCK_CAPACITY_MB = 16 * MB_PER_BUCKET;
@@ -164,6 +164,7 @@ public class FuelTankBlockEntity extends BlockEntity {
             case WATER -> new ItemStack(Items.WATER_BUCKET);
             case ROCKET_FUEL -> new ItemStack(ModItems.ROCKET_FUEL_BUCKET);
             case OXYGEN -> new ItemStack(ModItems.OXYGEN_BUCKET);
+            case KEROSENE -> new ItemStack(ModItems.KEROSENE_BUCKET);
             default -> null;
         };
         if (result == null) return null;

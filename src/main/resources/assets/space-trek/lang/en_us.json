@@ -4,5 +4,11 @@
   "block.space-trek.fuel_tank": "Fuel Tank",
   "block.space-trek.intake": "Oxygen Intake",
   "gui.space-trek.intake.oxygen": "Oxygen: %s / %s buckets",
-  "gui.space-trek.intake.amount": "%s / %s buckets"
+  "gui.space-trek.intake.amount": "%s / %s buckets",
+  "item.space-trek.kerosene_bucket": "Kerosene Bucket",
+  "block.space-trek.kerosene": "Kerosene",
+  "block.space-trek.kerosene_distiller": "Kerosene Distiller",
+  "block.space-trek.fuel_synthesizer": "Fuel Synthesizer",
+  "gui.space-trek.kerosene_distiller.amount": "%s / %s buckets",
+  "gui.space-trek.kerosene_distiller.kerosene": "Kerosene: %s / %s buckets"
 }
