@@ -1,10 +1,13 @@
 {
   "textures": {
-    "all": "space-trek:block/fuel_tank/ctm_2",
-    "particle": "space-trek:block/fuel_tank/ctm_2"
+    "glass": "space-trek:block/fuel_tank/glass",
+    "frame": "space-trek:block/fuel_tank/frame",
+    "corner": "space-trek:block/fuel_tank/corner",
+    "particle": "space-trek:block/fuel_tank/frame"
   },
   "elements": [
     {
+      "name": "pane",
       "from": [
         0,
         0,
@@ -23,8 +26,77 @@
             16,
             16
           ],
-          "texture": "#all",
+          "texture": "#glass",
           "cullface": "north"
+        }
+      }
+    },
+    {
+      "name": "bar_bottom",
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        1.5,
+        1.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            1.5
+          ],
+          "texture": "#frame"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            1.5,
+            1.5
+          ],
+          "texture": "#frame"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            16,
+            1.5
+          ],
+          "texture": "#frame"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            1.5,
+            1.5
+          ],
+          "texture": "#frame"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            16,
+            1.5
+          ],
+          "texture": "#frame"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            16,
+            1.5
+          ],
+          "texture": "#frame"
         }
       }
     }

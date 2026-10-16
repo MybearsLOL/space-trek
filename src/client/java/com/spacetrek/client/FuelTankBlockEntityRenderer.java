@@ -21,7 +21,7 @@ import net.minecraft.world.level.material.Fluids;
 
 public class FuelTankBlockEntityRenderer implements BlockEntityRenderer<FuelTankBlockEntity> {
 
-    private static final float MARGIN = 0.02f;
+    private static final float MARGIN = 0.1f;
     private static final float FULL = 0.999f;
 
     public FuelTankBlockEntityRenderer(BlockEntityRendererProvider.Context ctx) {}

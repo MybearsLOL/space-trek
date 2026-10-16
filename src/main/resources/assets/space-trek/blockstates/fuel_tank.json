@@ -831,7 +831,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_0",
-        "x": 270
+        "x": 90
       }
     },
     {
@@ -844,7 +844,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_1",
-        "x": 270
+        "x": 90
       }
     },
     {
@@ -857,7 +857,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_2",
-        "x": 270
+        "x": 90
       }
     },
     {
@@ -870,7 +870,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_3",
-        "x": 270
+        "x": 90
       }
     },
     {
@@ -883,7 +883,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_4",
-        "x": 270
+        "x": 90
       }
     },
     {
@@ -896,7 +896,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_5",
-        "x": 270
+        "x": 90
       }
     },
     {
@@ -909,7 +909,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_6",
-        "x": 270
+        "x": 90
       }
     },
     {
@@ -922,7 +922,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_7",
-        "x": 270
+        "x": 90
       }
     },
     {
@@ -935,7 +935,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_8",
-        "x": 270
+        "x": 90
       }
     },
     {
@@ -948,7 +948,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_9",
-        "x": 270
+        "x": 90
       }
     },
     {
@@ -961,7 +961,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_10",
-        "x": 270
+        "x": 90
       }
     },
     {
@@ -974,7 +974,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_11",
-        "x": 270
+        "x": 90
       }
     },
     {
@@ -987,7 +987,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_12",
-        "x": 270
+        "x": 90
       }
     },
     {
@@ -1000,7 +1000,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_13",
-        "x": 270
+        "x": 90
       }
     },
     {
@@ -1013,7 +1013,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_14",
-        "x": 270
+        "x": 90
       }
     },
     {
@@ -1026,7 +1026,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_15",
-        "x": 270
+        "x": 90
       }
     },
     {
@@ -1039,7 +1039,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_0",
-        "x": 90
+        "x": 270
       }
     },
     {
@@ -1052,7 +1052,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_1",
-        "x": 90
+        "x": 270
       }
     },
     {
@@ -1065,7 +1065,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_2",
-        "x": 90
+        "x": 270
       }
     },
     {
@@ -1078,7 +1078,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_3",
-        "x": 90
+        "x": 270
       }
     },
     {
@@ -1091,7 +1091,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_4",
-        "x": 90
+        "x": 270
       }
     },
     {
@@ -1104,7 +1104,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_5",
-        "x": 90
+        "x": 270
       }
     },
     {
@@ -1117,7 +1117,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_6",
-        "x": 90
+        "x": 270
       }
     },
     {
@@ -1130,7 +1130,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_7",
-        "x": 90
+        "x": 270
       }
     },
     {
@@ -1143,7 +1143,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_8",
-        "x": 90
+        "x": 270
       }
     },
     {
@@ -1156,7 +1156,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_9",
-        "x": 90
+        "x": 270
       }
     },
     {
@@ -1169,7 +1169,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_10",
-        "x": 90
+        "x": 270
       }
     },
     {
@@ -1182,7 +1182,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_11",
-        "x": 90
+        "x": 270
       }
     },
     {
@@ -1195,7 +1195,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_12",
-        "x": 90
+        "x": 270
       }
     },
     {
@@ -1208,7 +1208,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_13",
-        "x": 90
+        "x": 270
       }
     },
     {
@@ -1221,7 +1221,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_14",
-        "x": 90
+        "x": 270
       }
     },
     {
@@ -1234,7 +1234,7 @@
       },
       "apply": {
         "model": "space-trek:block/fuel_tank_ctm_15",
-        "x": 90
+        "x": 270
       }
     }
   ]

@@ -17,7 +17,7 @@ import net.minecraft.resources.ResourceLocation;
 public class IntakeBlockEntityRenderer implements BlockEntityRenderer<IntakeBlockEntity> {
 
     private static final ResourceLocation FAN_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath("space-trek", "block/intake");
+            ResourceLocation.fromNamespaceAndPath("space-trek", "block/intake/fan");
 
     private static final float CENTER_X = 8f / 16f;
     private static final float CENTER_Y = 8f / 16f;
@@ -46,10 +46,10 @@ public class IntakeBlockEntityRenderer implements BlockEntityRenderer<IntakeBloc
 
         float du = sprite.getU1() - sprite.getU0();
         float dv = sprite.getV1() - sprite.getV0();
-        float u0 = sprite.getU0() + du * 0.05f;
-        float u1 = sprite.getU0() + du * 0.45f;
-        float v0 = sprite.getV0() + dv * 0.05f;
-        float v1 = sprite.getV0() + dv * 0.45f;
+        float u0 = sprite.getU0() + du * 0.1f;
+        float u1 = sprite.getU0() + du * 0.9f;
+        float v0 = sprite.getV0() + dv * 0.1f;
+        float v1 = sprite.getV0() + dv * 0.9f;
 
         VertexConsumer vc = bufferSource.getBuffer(RenderType.entityCutoutNoCull(TextureAtlas.LOCATION_BLOCKS));
 

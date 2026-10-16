@@ -1,6 +1,6 @@
 {
   "textures": {
-    "particle": "space-trek:block/fuel_tank/ctm_15"
+    "particle": "space-trek:block/fuel_tank/frame"
   },
   "elements": []
 }
