@@ -18,6 +18,12 @@ public final class DimensionSky {
     /** Planet this dimension is on (its key, see PlanetRenderer.planetKey). Empty = none. */
     public String homePlanet = "";
 
+    /**
+     * The star that is this dimension's sun (its key). It is drawn in the sky, always visible in the
+     * day, and the day/night cycle follows it. Empty = no sun disc (the sky still has day and night).
+     */
+    public String sun = "";
+
     /** Other planets / moons that can be seen in this dimension's sky. */
     public List<SkyBody> planets = new ArrayList<>();
 
@@ -69,6 +75,7 @@ public final class DimensionSky {
         c.dimension = dimension;
         c.enabled = enabled;
         c.homePlanet = homePlanet;
+        c.sun = sun;
         c.planets = new ArrayList<>();
         for (SkyBody body : planets) {
             c.planets.add(body.copy());

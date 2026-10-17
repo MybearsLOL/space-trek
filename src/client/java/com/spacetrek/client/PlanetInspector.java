@@ -60,6 +60,14 @@ public class PlanetInspector extends SingleWindowInspector {
             keys.add(name.isEmpty() ? "planet" + (i + 1) : name);
         }
 
+        // Which of the planets are stars (suns)
+        List<String> starKeys = new ArrayList<>();
+        for (int i = 0; i < planets.size(); i++) {
+            if (planets.get(i).isStar.get()) {
+                starKeys.add(keys.get(i));
+            }
+        }
+
         boolean changed = false;
 
         if (ImGui.collapsingHeader("Global settings", ImGuiTreeNodeFlags.DefaultOpen)) {
@@ -79,6 +87,29 @@ public class PlanetInspector extends SingleWindowInspector {
                 if (ImGui.inputText("Name (press Enter)", p.name, ImGuiInputTextFlags.EnterReturnsTrue)) {
                     p.appliedName = p.name.get().trim();
                     changed = true;
+                }
+
+                changed |= ImGui.checkbox("This is a star (a sun)", p.isStar);
+                if (p.isStar.get()) {
+                    changed |= ImGui.colorEdit3("Star colour", p.starColor);
+                    changed |= ImGui.sliderFloat("Glow size (times the radius)", p.starGlowSize, 1.0f, 20.0f);
+                    changed |= ImGui.sliderFloat("Glow strength", p.starGlowStrength, 0.0f, 1.0f);
+                    ImGui.text("A star lights itself: no shading, atmosphere or clouds.");
+                } else {
+                    String litPreview = p.lightSource.isEmpty() ? "(shadow angle below)" : p.lightSource;
+                    if (ImGui.beginCombo("Lit by", litPreview)) {
+                        if (ImGui.selectable("(shadow angle below)", p.lightSource.isEmpty())) {
+                            p.lightSource = "";
+                            changed = true;
+                        }
+                        for (String key : starKeys) {
+                            if (ImGui.selectable(key, key.equals(p.lightSource))) {
+                                p.lightSource = key;
+                                changed = true;
+                            }
+                        }
+                        ImGui.endCombo();
+                    }
                 }
                 if (ImGui.inputText("Texture (press Enter)", p.texture, ImGuiInputTextFlags.EnterReturnsTrue)) {
                     p.appliedTexture = p.texture.get();
@@ -173,6 +204,11 @@ public class PlanetInspector extends SingleWindowInspector {
             changed = true;
         }
         ImGui.sameLine();
+        if (ImGui.button("Add sun")) {
+            planets.add(Editable.defaultSun());
+            changed = true;
+        }
+        ImGui.sameLine();
         if (ImGui.button("Save to file")) {
             PlanetConfig.save(buildPlanets(), buildSettings());
             status = "Saved to config/space-trek-planets.json";
@@ -252,7 +288,10 @@ public class PlanetInspector extends SingleWindowInspector {
                     e.rotationZ[0],
                     e.orbitParent.isEmpty() ? null : new PlanetRenderer.Orbit(
                             e.orbitParent, e.orbitRadius[0], e.orbitPeriod[0],
-                            e.orbitInclination[0], e.orbitNode[0], e.orbitPhase[0])
+                            e.orbitInclination[0], e.orbitNode[0], e.orbitPhase[0]),
+                    e.isStar.get() ? new PlanetRenderer.Star(
+                            toColor(e.starColor), e.starGlowSize[0], e.starGlowStrength[0]) : null,
+                    e.lightSource
             ));
         }
         return list;
@@ -282,6 +321,12 @@ public class PlanetInspector extends SingleWindowInspector {
         final float[] rotationX = new float[1];
         final float[] rotationY = new float[1];
         final float[] rotationZ = new float[1];
+
+        final ImBoolean isStar = new ImBoolean(false);
+        final float[] starColor = new float[]{1.0f, 0.95f, 0.78f};
+        final float[] starGlowSize = new float[]{4.0f};
+        final float[] starGlowStrength = new float[]{1.0f};
+        String lightSource = "";
 
         String orbitParent = "";
         final float[] orbitRadius = new float[]{5000.0f};
@@ -325,6 +370,14 @@ public class PlanetInspector extends SingleWindowInspector {
             e.rotationY[0] = p.rotationY();
             e.rotationZ[0] = p.rotationZ();
 
+            e.lightSource = p.lightSource() == null ? "" : p.lightSource();
+            if (p.star() != null) {
+                e.isStar.set(true);
+                fromColor(p.star().color(), e.starColor);
+                e.starGlowSize[0] = p.star().glowSize();
+                e.starGlowStrength[0] = p.star().glowStrength();
+            }
+
             PlanetRenderer.Orbit orbit = p.orbit();
             if (orbit != null && orbit.parent() != null) {
                 e.orbitParent = orbit.parent();
@@ -360,6 +413,23 @@ public class PlanetInspector extends SingleWindowInspector {
                 e.cloudAlpha.set(clouds.useAlpha());
             }
             return e;
+        }
+
+        /** A sun straight above the first planet's default spot, big and far away. */
+        static Editable defaultSun() {
+            return from(new PlanetRenderer.Planet(
+                    DEFAULT_TEXTURE,
+                    0.0, 150000.0, -6000.0,
+                    20000.0f, 0.0f, 0.0f,
+                    0.0f, 0.0f,
+                    0xFFFFFF, 0xFFFFFF,
+                    0.0f, 0.0f, 0.0f,
+                    null, "", "sun",
+                    0.0f, 0.0f, 0.0f,
+                    null,
+                    new PlanetRenderer.Star(0xFFF2C8, 4.0f, 1.0f),
+                    ""
+            ));
         }
 
         static Editable defaults() {

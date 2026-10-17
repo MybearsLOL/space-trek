@@ -79,6 +79,14 @@ public class PlanetConfig {
             o.addProperty("atmosphereDensity", p.atmosphereDensity());
             o.addProperty("atmosphereBrightness", p.atmosphereBrightness());
             o.addProperty("dimension", p.dimension() == null ? "" : p.dimension());
+            if (p.star() != null) {
+                JsonObject t = new JsonObject();
+                t.addProperty("color", String.format("#%06X", p.star().color() & 0xFFFFFF));
+                t.addProperty("glowSize", p.star().glowSize());
+                t.addProperty("glowStrength", p.star().glowStrength());
+                o.add("star", t);
+            }
+            o.addProperty("lightSource", p.lightSource() == null ? "" : p.lightSource());
             PlanetRenderer.Orbit orbit = p.orbit();
             if (orbit != null && orbit.parent() != null && !orbit.parent().isEmpty()) {
                 JsonObject b = new JsonObject();
@@ -249,6 +257,16 @@ public class PlanetConfig {
             }
         }
 
+        PlanetRenderer.Star star = null;
+        if (o.has("star") && o.get("star").isJsonObject()) {
+            JsonObject t = o.getAsJsonObject("star");
+            star = new PlanetRenderer.Star(
+                    getColor(t, "color", 0xFFF2C8),
+                    getFloat(t, "glowSize", 4.0f),
+                    getFloat(t, "glowStrength", 1.0f)
+            );
+        }
+
         return new PlanetRenderer.Planet(
                 ResourceLocation.parse(getString(o, "texture", "space-trek:textures/planet/example_planet.png")),
                 getDouble(o, "x", 0.0),
@@ -270,7 +288,9 @@ public class PlanetConfig {
                 getFloat(o, "rotationX", 0.0f),
                 getFloat(o, "rotationY", 0.0f),
                 getFloat(o, "rotationZ", 0.0f),
-                orbit
+                orbit,
+                star,
+                getString(o, "lightSource", "").trim()
         );
     }
 

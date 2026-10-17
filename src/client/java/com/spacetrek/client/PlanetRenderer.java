@@ -161,6 +161,17 @@ public class PlanetRenderer {
                         float inclination, float node, float phase) {
     }
 
+    /**
+     * Makes a body a STAR (a sun): it glows by itself instead of being lit, has no atmosphere or
+     * clouds, and gets a soft glow around it.
+     *
+     * color        - colour of the star and its glow
+     * glowSize     - size of the glow, as a multiple of the star's radius (4 = four times as wide)
+     * glowStrength - 0 = no glow, 1 = full glow
+     */
+    public record Star(int color, float glowSize, float glowStrength) {
+    }
+
     public record Clouds(ResourceLocation texture,
                          float altitude,
                          float opacity,
@@ -193,7 +204,9 @@ public class PlanetRenderer {
                          float rotationX,
                          float rotationY,
                          float rotationZ,
-                         Orbit orbit) {
+                         Orbit orbit,
+                         Star star,
+                         String lightSource) {
 
         /** Planet without clouds (keeps the older 13-value constructor working). */
         public Planet(ResourceLocation texture,
@@ -209,7 +222,7 @@ public class PlanetRenderer {
                       float atmosphereDensity,
                       float atmosphereBrightness) {
             this(texture, x, y, z, radius, spinDegPerTick, axialTiltDeg, shadowAngleDeg, shadowTiltDeg,
-                    atmosphereColor, twilightColor, atmosphereHeight, atmosphereDensity, atmosphereBrightness, null, "", "", 0.0f, 0.0f, 0.0f, null);
+                    atmosphereColor, twilightColor, atmosphereHeight, atmosphereDensity, atmosphereBrightness, null, "", "", 0.0f, 0.0f, 0.0f, null, null, "");
         }
 
         /**
@@ -431,12 +444,18 @@ public class PlanetRenderer {
         );
         float drawRadius = planet.radius() * scale;
 
-        Vector3f sun = planet.sunDir();
+        Vector3f sun = lightDirection(planet, position);
 
         // The whole sky turns with the day/night rotation (positions and the star's direction)
         if (skyRotation != null) {
             skyRotation.transform(offset);
             skyRotation.transform(sun);
+        }
+
+        // Stars glow by themselves: no lighting, atmosphere or clouds
+        if (planet.star() != null) {
+            drawStar(planet.star(), offset, drawRadius, inverseCamRot);
+            return;
         }
 
         // ---- 1) Fallback halo (only when the Veil shader is not available) ----
@@ -617,6 +636,163 @@ public class PlanetRenderer {
             float c = s * opacity;
             buffer.addVertex(matrix, NX[i], NY[i], NZ[i]).setUv(U[i], V[i]).setColor(c, c, c, 1.0f);
         }
+    }
+
+    // ---------------------------------------------------------------------------------
+    // STARS (SUNS)
+    // ---------------------------------------------------------------------------------
+
+    /**
+     * Direction from a planet toward its light. If the planet is "lit by" a star, that is the
+     * direction to the star (so the shadow follows the sun as things orbit); otherwise the
+     * planet's own shadow angle is used.
+     */
+    private static Vector3f lightDirection(Planet planet, Vec3 position) {
+        String source = planet.lightSource();
+        if (source != null && !source.isEmpty()) {
+            Planet star = findPlanet(source);
+            if (star != null && star != planet) {
+                Vec3 toStar = positionOf(star).subtract(position);
+                if (toStar.lengthSqr() > 1.0e-6) {
+                    return new Vector3f((float) toStar.x, (float) toStar.y, (float) toStar.z).normalize();
+                }
+            }
+        }
+        return planet.sunDir();
+    }
+
+    private static void drawStar(Star star, Vector3f offset, float drawRadius, Quaternionf inverseCamRot) {
+        float[] rgb = rgb(star.color());
+
+        // Slightly brighter in the middle than at the edge, like a real star's disc
+        for (int i = 0; i < VERT_COUNT; i++) {
+            float px = offset.x + NX[i] * drawRadius;
+            float py = offset.y + NY[i] * drawRadius;
+            float pz = offset.z + NZ[i] * drawRadius;
+            float len = (float) Math.sqrt(px * px + py * py + pz * pz);
+            float facing = len > 0.0f ? -(NX[i] * px + NY[i] * py + NZ[i] * pz) / len : 1.0f;
+            facing = Math.max(0.0f, Math.min(1.0f, facing));
+            float shade = 0.7f + 0.3f * facing;
+            RIM_R[i] = Math.min(1.0f, rgb[0] * shade * 1.2f);
+            RIM_G[i] = Math.min(1.0f, rgb[1] * shade * 1.2f);
+            RIM_B[i] = Math.min(1.0f, rgb[2] * shade * 1.2f);
+            RIM_A[i] = renderAlpha;
+        }
+
+        Matrix4f matrix = new Matrix4f()
+                .rotation(inverseCamRot)
+                .translate(offset)
+                .scale(drawRadius);
+
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+        if (renderAlpha < 0.999f) {
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+        } else {
+            RenderSystem.disableBlend();
+        }
+        RenderSystem.enableCull();
+
+        BufferBuilder buffer = Tesselator.getInstance()
+                .begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
+
+        for (int lat = 0; lat < LAT_SEGMENTS; lat++) {
+            for (int lon = 0; lon < LON_SEGMENTS; lon++) {
+                int i00 = lat * COLS + lon;
+                int i01 = i00 + 1;
+                int i10 = i00 + COLS;
+                int i11 = i10 + 1;
+
+                addRimVertex(buffer, matrix, i00);
+                addRimVertex(buffer, matrix, i11);
+                addRimVertex(buffer, matrix, i10);
+
+                addRimVertex(buffer, matrix, i00);
+                addRimVertex(buffer, matrix, i01);
+                addRimVertex(buffer, matrix, i11);
+            }
+        }
+
+        MeshData mesh = buffer.build();
+        if (mesh != null) {
+            BufferUploader.drawWithShader(mesh);
+        }
+
+        drawStarGlow(star, offset, drawRadius, inverseCamRot);
+    }
+
+    /** The soft glow around a star: a disc facing the camera that fades out toward its edge. */
+    private static void drawStarGlow(Star star, Vector3f offset, float drawRadius, Quaternionf inverseCamRot) {
+        if (star.glowStrength() <= 0.0f) {
+            return;
+        }
+
+        Vector3f center = inverseCamRot.transform(new Vector3f(offset), new Vector3f());
+        float d = center.length();
+        if (d <= drawRadius * 1.01f) {
+            return; // inside the star
+        }
+
+        float rLimb = limbRadius(drawRadius, d);
+        float rIn = rLimb * 0.95f;
+        float rOut = rLimb * Math.max(1.05f, star.glowSize());
+
+        Vector3f dir = new Vector3f(center).div(d);
+        Vector3f up = Math.abs(dir.y) > 0.99f ? new Vector3f(1, 0, 0) : new Vector3f(0, 1, 0);
+        Vector3f u = dir.cross(up, new Vector3f()).normalize();
+        Vector3f v = u.cross(dir, new Vector3f()).normalize();
+
+        float[] rgb = rgb(star.color());
+        float strength = Math.max(0.0f, Math.min(1.0f, star.glowStrength())) * renderAlpha;
+        int slices = 64;
+        int rings = 12;
+
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+        RenderSystem.enableBlend();
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
+        RenderSystem.disableCull();
+
+        BufferBuilder buffer = Tesselator.getInstance()
+                .begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
+
+        for (int k = 0; k < slices; k++) {
+            double a0 = 2.0 * Math.PI * k / slices;
+            double a1 = 2.0 * Math.PI * (k + 1) / slices;
+            float c0 = (float) Math.cos(a0);
+            float s0 = (float) Math.sin(a0);
+            float c1 = (float) Math.cos(a1);
+            float s1 = (float) Math.sin(a1);
+            float w0x = u.x * c0 + v.x * s0, w0y = u.y * c0 + v.y * s0, w0z = u.z * c0 + v.z * s0;
+            float w1x = u.x * c1 + v.x * s1, w1y = u.y * c1 + v.y * s1, w1z = u.z * c1 + v.z * s1;
+
+            for (int ring = 0; ring < rings; ring++) {
+                float t0 = (float) ring / rings;
+                float t1 = (float) (ring + 1) / rings;
+                float r0 = lerp(rIn, rOut, t0);
+                float r1 = lerp(rIn, rOut, t1);
+                float f0 = strength * (float) Math.pow(1.0f - t0, 2.2);
+                float f1 = strength * (float) Math.pow(1.0f - t1, 2.2);
+
+                haloVertex(buffer, center, w0x, w0y, w0z, r0, rgb[0], rgb[1], rgb[2], f0);
+                haloVertex(buffer, center, w1x, w1y, w1z, r0, rgb[0], rgb[1], rgb[2], f0);
+                haloVertex(buffer, center, w1x, w1y, w1z, r1, rgb[0], rgb[1], rgb[2], f1);
+
+                haloVertex(buffer, center, w0x, w0y, w0z, r0, rgb[0], rgb[1], rgb[2], f0);
+                haloVertex(buffer, center, w1x, w1y, w1z, r1, rgb[0], rgb[1], rgb[2], f1);
+                haloVertex(buffer, center, w0x, w0y, w0z, r1, rgb[0], rgb[1], rgb[2], f1);
+            }
+        }
+
+        MeshData mesh = buffer.build();
+        if (mesh != null) {
+            BufferUploader.drawWithShader(mesh);
+        }
+
+        RenderSystem.enableCull();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.disableBlend();
     }
 
     private static void addPlanetVertex(BufferBuilder buffer, Matrix4f matrix, int i) {

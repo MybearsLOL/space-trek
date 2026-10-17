@@ -74,6 +74,14 @@ public class SkyInspector extends SingleWindowInspector {
             planetKeys.add(PlanetRenderer.planetKey(planets.get(i), i));
         }
 
+        // Which of those are stars (suns)
+        List<String> starKeys = new ArrayList<>();
+        for (int i = 0; i < planets.size(); i++) {
+            if (planets.get(i).star() != null) {
+                starKeys.add(planetKeys.get(i));
+            }
+        }
+
         boolean starsChanged = false;
         boolean skiesChanged = false;
 
@@ -134,6 +142,24 @@ public class SkyInspector extends SingleWindowInspector {
                     ImGui.endCombo();
                 }
 
+                String sunPreview = e.sun.isEmpty() ? "(none)" : e.sun;
+                if (ImGui.beginCombo("Sun (star that lights this sky)", sunPreview)) {
+                    if (ImGui.selectable("(none)", e.sun.isEmpty())) {
+                        e.sun = "";
+                        skiesChanged = true;
+                    }
+                    for (String key : starKeys) {
+                        if (ImGui.selectable(key, key.equals(e.sun))) {
+                            e.sun = key;
+                            skiesChanged = true;
+                        }
+                    }
+                    ImGui.endCombo();
+                }
+                if (starKeys.isEmpty()) {
+                    ImGui.text("(no stars yet - press Add sun in the Planet Editor)");
+                }
+
                 ImGui.text("Other planets seen in this sky:");
                 boolean any = false;
                 for (String key : planetKeys) {
@@ -161,7 +187,7 @@ public class SkyInspector extends SingleWindowInspector {
                 skiesChanged |= ImGui.colorEdit3("Horizon colour", e.horizonColor);
                 skiesChanged |= ImGui.colorEdit3("Sunset / sunrise colour", e.twilightColor);
                 skiesChanged |= ImGui.sliderFloat("Glow strength (1 = hides stars by day)", e.strength, 0.0f, 1.0f);
-                skiesChanged |= ImGui.sliderFloat("Glow around the sun", e.sunGlow, 0.0f, 2.0f);
+                skiesChanged |= ImGui.sliderFloat("Soft sun glow (only when no Sun is chosen)", e.sunGlow, 0.0f, 2.0f);
                 skiesChanged |= ImGui.sliderFloat("Night when sun below (deg)", e.dayStart, -30.0f, 10.0f);
                 skiesChanged |= ImGui.sliderFloat("Full day when sun above (deg)", e.dayEnd, -5.0f, 60.0f);
                 skiesChanged |= ImGui.dragFloat("Glow starts thinning at height", e.fadeStartY, 5.0f, 0.0f, 100000.0f);
@@ -266,6 +292,7 @@ public class SkyInspector extends SingleWindowInspector {
             sky.dimension = e.appliedDimension;
             sky.enabled = e.enabled.get();
             sky.homePlanet = e.homePlanet;
+            sky.sun = e.sun;
             for (Map.Entry<String, EditableBody> entry : e.visible.entrySet()) {
                 EditableBody body = entry.getValue();
                 if (body.visible.get() && !entry.getKey().equals(e.homePlanet)) {
@@ -313,6 +340,7 @@ public class SkyInspector extends SingleWindowInspector {
         String appliedDimension = "";
         final ImBoolean enabled = new ImBoolean(true);
         String homePlanet = "";
+        String sun = "";
         final Map<String, EditableBody> visible = new LinkedHashMap<>();
         final float[] poleTilt = new float[1];
         final float[] atmosphereColor = new float[3];
@@ -331,6 +359,7 @@ public class SkyInspector extends SingleWindowInspector {
             e.dimension.set(sky.dimension);
             e.enabled.set(sky.enabled);
             e.homePlanet = sky.homePlanet;
+            e.sun = sky.sun;
             for (DimensionSky.SkyBody body : sky.planets) {
                 EditableBody editable = new EditableBody();
                 editable.visible.set(true);

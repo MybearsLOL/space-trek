@@ -114,12 +114,39 @@ public class SpaceSkyRenderer implements DimensionRenderingRegistry.SkyRenderer 
 
         Vec3 cameraPos = camera.getPosition();
 
+        // The planet this dimension is on, and the star that lights it
+        PlanetRenderer.Planet home = PlanetRenderer.findPlanet(sky.homePlanet);
+        PlanetRenderer.Planet sunBody = PlanetRenderer.findPlanet(sky.sun);
+        if (sunBody != null && sunBody.star() == null) {
+            sunBody = null; // only stars can be the sun
+        }
+
+        // The point in space the sky is seen from: a spot on the home planet's surface (above the
+        // camera's x / z), or the camera itself when no home planet is set
+        Vec3 viewPosition = cameraPos;
+        if (home != null) {
+            double altitude = Math.max(0.0, cameraPos.y - ModDimensions.HOME_SURFACE_Y);
+            Vec3 offset = PlanetGates.capOffset(cameraPos.x, cameraPos.z, home.radius() + altitude);
+            viewPosition = PlanetRenderer.positionOf(home).add(offset);
+        }
+
+        // Where the sun is in the (turning) celestial sky: toward the sun body, measured from that
+        // same point, so the day/night cycle and the drawn sun always point the same way.
+        // Without a sun body it is straight up, which is the vanilla sun path.
+        Vector3f sunCelestial = new Vector3f(0.0f, 1.0f, 0.0f);
+        if (sunBody != null) {
+            Vec3 toSun = PlanetRenderer.positionOf(sunBody).subtract(viewPosition);
+            if (toSun.lengthSqr() > 1.0e-6) {
+                sunCelestial.set((float) toSun.x, (float) toSun.y, (float) toSun.z).normalize();
+            }
+        }
+
         // The sky turns like the vanilla sun does: one full turn per day
         float angle = level.getTimeOfDay(partialTick) * ((float) Math.PI * 2.0f);
         double tilt = Math.toRadians(sky.poleTilt);
         Vector3f axis = new Vector3f(0.0f, (float) Math.sin(tilt), (float) -Math.cos(tilt));
         Quaternionf celestialToWorld = new Quaternionf().rotationAxis(-angle, axis.x, axis.y, axis.z);
-        Vector3f sunWorld = celestialToWorld.transform(0.0f, 1.0f, 0.0f, new Vector3f());
+        Vector3f sunWorld = celestialToWorld.transform(sunCelestial.x, sunCelestial.y, sunCelestial.z, new Vector3f());
 
         // Day / night from the sun's height above the horizon
         float elevation = (float) Math.toDegrees(Math.asin(Math.max(-1.0f, Math.min(1.0f, sunWorld.y))));
@@ -133,13 +160,6 @@ public class SpaceSkyRenderer implements DimensionRenderingRegistry.SkyRenderer 
         drawSkyShader(camera, 1.0f, angle, axis, null);
 
         // 2) planets, as seen from the home planet
-        PlanetRenderer.Planet home = PlanetRenderer.findPlanet(sky.homePlanet);
-        Vec3 viewPosition = cameraPos;
-        if (home != null) {
-            double altitude = Math.max(0.0, cameraPos.y - ModDimensions.HOME_SURFACE_Y);
-            Vec3 offset = PlanetGates.capOffset(cameraPos.x, cameraPos.z, home.radius() + altitude);
-            viewPosition = PlanetRenderer.positionOf(home).add(offset);
-        }
 
         // Bodies that the day sky covers (drawn before the glow) and bodies that stay visible in
         // the day (drawn after it, on top of the glow)
@@ -156,7 +176,7 @@ public class SpaceSkyRenderer implements DimensionRenderingRegistry.SkyRenderer 
         }
         for (DimensionSky.SkyBody body : sky.planets) {
             PlanetRenderer.Planet planet = PlanetRenderer.findPlanet(body.key);
-            if (planet == null || planet == home) {
+            if (planet == null || planet == home || planet == sunBody) {
                 continue;
             }
             float opacity = Math.max(0.0f, Math.min(1.0f, body.opacity));
@@ -174,12 +194,17 @@ public class SpaceSkyRenderer implements DimensionRenderingRegistry.SkyRenderer 
         float glowAlpha = sky.atmosphereStrength * altitudeFactor * day;
         float glowTwilight = twilight * altitudeFactor * sky.atmosphereStrength;
         if (glowAlpha > 0.002f || glowTwilight > 0.002f) {
-            Glow glow = new Glow(glowAlpha, day, glowTwilight, sky.sunGlow * altitudeFactor, sunWorld,
+            float haloStrength = sunBody != null ? 0.0f : sky.sunGlow; // a sun body has its own glow
+            Glow glow = new Glow(glowAlpha, day, glowTwilight, haloStrength * altitudeFactor, sunWorld,
                     sky.atmosphereColor, sky.horizonColor, sky.twilightColor);
             drawSkyShader(camera, 1.0f, angle, axis, glow);
         }
 
-        // 4) bodies that are still seen in the day, over the glow
+        // 4) the sun, and bodies that are still seen in the day, over the glow
+        if (sunBody != null) {
+            inFront.add(sunBody);
+            inFrontAlpha.add(1.0f);
+        }
         if (!inFront.isEmpty()) {
             PlanetRenderer.renderPlanets(camera, viewPosition, celestialToWorld, inFront, toArray(inFrontAlpha), 1.0f);
         }
