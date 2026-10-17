@@ -50,5 +50,11 @@ public class ModBlockEntities {
                     FabricBlockEntityTypeBuilder.create(CoolerPortBlockEntity::new,
                             ModBlocks.COOLER_PORT_BLOCK).build());
 
+    public static final BlockEntityType<HoloProjectorBlockEntity> HOLO_PROJECTOR =
+            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
+                    ResourceLocation.fromNamespaceAndPath("space-trek", "holo_projector"),
+                    FabricBlockEntityTypeBuilder.create(HoloProjectorBlockEntity::new,
+                            ModBlocks.HOLO_PROJECTOR_BLOCK).build());
+
     public static void initialize() {}
 }

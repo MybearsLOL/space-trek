@@ -102,6 +102,11 @@ public class ModItems {
             new BlockItem(ModBlocks.COOLER_CONTROLLER_BLOCK, new Item.Properties())
     );
 
+    public static final BlockItem HOLO_PROJECTOR = register(
+            "holo_projector",
+            new BlockItem(ModBlocks.HOLO_PROJECTOR_BLOCK, new Item.Properties())
+    );
+
     private static <T extends Item> T register(String name, T item) {
         return Registry.register(BuiltInRegistries.ITEM,
                 ResourceLocation.fromNamespaceAndPath("space-trek", name), item);
@@ -124,6 +129,7 @@ public class ModItems {
                     entries.accept(COOLER_CONTROLLER);
                     entries.accept(COOLER_CASING);
                     entries.accept(COOLER_PORT);
+                    entries.accept(HOLO_PROJECTOR);
                     entries.accept(KEROSENE_DISTILLER);
                     entries.accept(FUEL_SYNTHESIZER);
                 });

@@ -151,5 +151,13 @@ public class ModBlocks {
                     .lightLevel(state -> state.getValue(BlockStateProperties.LIT) ? 7 : 0))
     );
 
+    public static final HoloProjectorBlock HOLO_PROJECTOR_BLOCK = Registry.register(
+            BuiltInRegistries.BLOCK,
+            ResourceLocation.fromNamespaceAndPath("space-trek", "holo_projector"),
+            new HoloProjectorBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
+                    .noOcclusion()
+                    .lightLevel(state -> 8))
+    );
+
     public static void initialize() {}
 }

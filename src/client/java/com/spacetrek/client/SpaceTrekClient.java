@@ -84,6 +84,7 @@ public class SpaceTrekClient implements ClientModInitializer {
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.FUEL_SYNTHESIZER_BLOCK, RenderType.translucent());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.COAL_GENERATOR_BLOCK, RenderType.cutout());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.FLUID_PIPE_BLOCK, RenderType.cutout());
+		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.HOLO_PROJECTOR_BLOCK, RenderType.translucent());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.COOLER_CONTROLLER_BLOCK, RenderType.translucent());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.COOLER_PORT_BLOCK, RenderType.cutout());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.POWER_CABLE_BLOCK, RenderType.cutout());
@@ -96,6 +97,7 @@ public class SpaceTrekClient implements ClientModInitializer {
 		BlockEntityRenderers.register(ModBlockEntities.KEROSENE_DISTILLER, KeroseneDistillerRenderer::new);
 		BlockEntityRenderers.register(ModBlockEntities.FUEL_SYNTHESIZER, FuelSynthesizerRenderer::new);
 		BlockEntityRenderers.register(ModBlockEntities.COOLER_CONTROLLER, CoolerRenderer::new);
+		BlockEntityRenderers.register(ModBlockEntities.HOLO_PROJECTOR, HoloProjectorRenderer::new);
 
 		HudRenderCallback.EVENT.register((gui, deltaTracker) -> {
 			float partial = deltaTracker.getGameTimeDeltaPartialTick(true);

@@ -23,5 +23,7 @@
   "block.space-trek.cooler_controller": "Cryo Cooler",
   "block.space-trek.cooler_casing": "Cooler Casing",
   "block.space-trek.cooler_port": "Cooler Port",
-  "message.space-trek.cooler_incomplete": "Cryo Cooler incomplete: build a 3x2x2 casing frame, controller at front-bottom centre, ports at both back-bottom corners"
+  "message.space-trek.cooler_incomplete": "Cryo Cooler incomplete: build a 3x2x2 casing frame, controller at front-bottom centre, ports at both back-bottom corners",
+  "block.space-trek.holo_projector": "Holo Projector",
+  "message.space-trek.holo_rotated": "Hologram rotated"
 }

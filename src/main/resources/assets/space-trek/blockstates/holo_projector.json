@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "space-trek:block/holo_projector"
+    },
+    "facing=east": {
+      "model": "space-trek:block/holo_projector",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "space-trek:block/holo_projector",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "space-trek:block/holo_projector",
+      "y": 270
+    }
+  }
+}

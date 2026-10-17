@@ -9,6 +9,7 @@
     "space-trek:fluid_pipe",
     "space-trek:cooler_casing",
     "space-trek:cooler_port",
-    "space-trek:cooler_controller"
+    "space-trek:cooler_controller",
+    "space-trek:holo_projector"
   ]
 }
