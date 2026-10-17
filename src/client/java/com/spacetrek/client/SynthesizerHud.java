@@ -24,7 +24,7 @@ public class SynthesizerHud {
         int screenH = mc.getWindow().getGuiScaledHeight();
 
         int panelW = 170;
-        int panelH = 82;
+        int panelH = 96;
         int panelX = (screenW - panelW) / 2;
         int panelY = screenH - panelH - 50;
 
@@ -37,6 +37,8 @@ public class SynthesizerHud {
         bar(gui, mc, panelX + 10, panelY + 34, panelW - 20, "Oxygen", synth.getOxygen(), max, 0xFFAADDFF);
         bar(gui, mc, panelX + 10, panelY + 48, panelW - 20, "Rocket Fuel", synth.getRocketFuel(), max, 0xFFFFD700);
 
+        bar(gui, mc, panelX + 10, panelY + 62, panelW - 20, "Power", synth.getEnergy(), FuelSynthesizerBlockEntity.MAX_ENERGY, 0xFF3DD16B);
+
         String status;
         int statusColor;
         if (synth.getProgress() > 0) {
@@ -47,11 +49,14 @@ public class SynthesizerHud {
                 || synth.getOxygen() < FuelSynthesizerBlockEntity.OXYGEN_COST) {
             status = "Needs 1 kerosene + 1 oxygen bucket";
             statusColor = 0xFF888888;
+        } else if (synth.getEnergy() < FuelSynthesizerBlockEntity.POWER_PER_TICK) {
+            status = "No power";
+            statusColor = 0xFFFF5555;
         } else {
             status = "Output full";
             statusColor = 0xFFFFAA00;
         }
-        gui.drawCenteredString(mc.font, Component.literal(status), panelX + panelW / 2, panelY + 68, statusColor);
+        gui.drawCenteredString(mc.font, Component.literal(status), panelX + panelW / 2, panelY + 82, statusColor);
     }
 
     private static void bar(GuiGraphics gui, Minecraft mc, int x, int y, int w, String label, int value, int max, int color) {

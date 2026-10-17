@@ -16,6 +16,14 @@ public class ModMenuTypes {
                     BlockPos.STREAM_CODEC)
     );
 
+    public static final MenuType<CoalGeneratorMenu> COAL_GENERATOR = Registry.register(
+            BuiltInRegistries.MENU,
+            SpaceTrek.id("coal_generator"),
+            new ExtendedScreenHandlerType<CoalGeneratorMenu, BlockPos>(
+                    (syncId, inventory, pos) -> new CoalGeneratorMenu(syncId, inventory, pos),
+                    BlockPos.STREAM_CODEC)
+    );
+
     public static final MenuType<KeroseneDistillerMenu> KEROSENE_DISTILLER = Registry.register(
             BuiltInRegistries.MENU,
             SpaceTrek.id("kerosene_distiller"),

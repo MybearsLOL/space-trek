@@ -3,6 +3,8 @@
   "values": [
     "space-trek:kerosene_distiller",
     "space-trek:fuel_synthesizer",
-    "space-trek:intake"
+    "space-trek:intake",
+    "space-trek:coal_generator",
+    "space-trek:power_cable"
   ]
 }

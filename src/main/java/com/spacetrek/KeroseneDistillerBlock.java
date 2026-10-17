@@ -30,7 +30,7 @@ import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
 
-public class KeroseneDistillerBlock extends Block implements EntityBlock {
+public class KeroseneDistillerBlock extends Block implements EntityBlock, PowerConnectable {
 
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
@@ -70,28 +70,41 @@ public class KeroseneDistillerBlock extends Block implements EntityBlock {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        if (level.isClientSide || type != ModBlockEntities.KEROSENE_DISTILLER) return null;
+        if (type != ModBlockEntities.KEROSENE_DISTILLER) return null;
+        if (level.isClientSide) {
+            return (lvl, pos, st, be) -> ((KeroseneDistillerBlockEntity) be).clientTick(lvl, pos, st);
+        }
         return (lvl, pos, st, be) -> ((KeroseneDistillerBlockEntity) be).serverTick(lvl, pos, st);
     }
 
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
                                               Player player, InteractionHand hand, BlockHitResult hit) {
-        if (!stack.is(Items.BUCKET)) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        boolean pouring = stack.is(ModItems.CRUDE_OIL_BUCKET);
+        boolean taking = stack.is(Items.BUCKET);
+        if (!pouring && !taking) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 
         BlockEntity be = level.getBlockEntity(pos);
-        if (!(be instanceof KeroseneDistillerBlockEntity distiller) || !distiller.hasBucketReady()) {
+        if (!(be instanceof KeroseneDistillerBlockEntity distiller)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
-        if (!level.isClientSide) {
+        if (level.isClientSide) {
+            return ItemInteractionResult.sidedSuccess(true);
+        }
+
+        if (pouring) {
+            if (!distiller.addCrude()) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+            player.setItemInHand(hand, ItemUtils.createFilledResult(stack, player, new ItemStack(Items.BUCKET)));
+            level.playSound(null, pos, SoundEvents.BUCKET_EMPTY, SoundSource.BLOCKS, 1.0f, 1.0f);
+        } else {
+            if (!distiller.hasBucketReady()) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
             distiller.extractBucket();
-            ItemStack filled = ItemUtils.createFilledResult(stack, player, new ItemStack(ModItems.KEROSENE_BUCKET));
-            player.setItemInHand(hand, filled);
+            player.setItemInHand(hand, ItemUtils.createFilledResult(stack, player, new ItemStack(ModItems.KEROSENE_BUCKET)));
             level.playSound(null, pos, SoundEvents.BUCKET_FILL, SoundSource.BLOCKS, 1.0f, 1.0f);
         }
 
-        return ItemInteractionResult.sidedSuccess(level.isClientSide);
+        return ItemInteractionResult.sidedSuccess(false);
     }
 
     @Override
@@ -111,7 +124,7 @@ public class KeroseneDistillerBlock extends Block implements EntityBlock {
         if (!state.is(newState.getBlock())) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof KeroseneDistillerBlockEntity distiller) {
-                Containers.dropContents(level, pos, distiller.getFeedstockContainer());
+                Containers.dropContents(level, pos, distiller.getCatalystContainer());
             }
         }
         super.onRemove(state, level, pos, newState, movedByPiston);

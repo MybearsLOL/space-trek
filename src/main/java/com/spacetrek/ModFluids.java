@@ -37,5 +37,15 @@ public class ModFluids {
                     ResourceLocation.fromNamespaceAndPath("space-trek", "kerosene_flowing"),
                     new KeroseneFluid.Flowing());
 
+    public static final FlowingFluid CRUDE_OIL_SOURCE =
+            Registry.register(BuiltInRegistries.FLUID,
+                    ResourceLocation.fromNamespaceAndPath("space-trek", "crude_oil"),
+                    new CrudeOilFluid.Source());
+
+    public static final FlowingFluid CRUDE_OIL_FLOWING =
+            Registry.register(BuiltInRegistries.FLUID,
+                    ResourceLocation.fromNamespaceAndPath("space-trek", "crude_oil_flowing"),
+                    new CrudeOilFluid.Flowing());
+
     public static void initialize() {}
 }

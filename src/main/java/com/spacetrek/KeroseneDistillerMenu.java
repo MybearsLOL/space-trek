@@ -14,8 +14,8 @@ import net.minecraft.world.item.ItemStack;
 
 public class KeroseneDistillerMenu extends AbstractContainerMenu {
 
-    public static final int FEED_SLOT_X = 26;
-    public static final int FEED_SLOT_Y = 40;
+    public static final int FEED_SLOT_X = 80;
+    public static final int FEED_SLOT_Y = 26;
 
     private static final int PLAYER_INVENTORY_START = 1;
     private static final int HOTBAR_START = 28;
@@ -30,19 +30,19 @@ public class KeroseneDistillerMenu extends AbstractContainerMenu {
                 new SimpleContainerData(KeroseneDistillerBlockEntity.DATA_COUNT), ContainerLevelAccess.NULL);
     }
 
-    public KeroseneDistillerMenu(int containerId, Inventory inventory, BlockPos pos, Container feedstock,
+    public KeroseneDistillerMenu(int containerId, Inventory inventory, BlockPos pos, Container catalyst,
                                  ContainerData data, ContainerLevelAccess access) {
         super(ModMenuTypes.KEROSENE_DISTILLER, containerId);
-        checkContainerSize(feedstock, 1);
+        checkContainerSize(catalyst, 1);
         checkContainerDataCount(data, KeroseneDistillerBlockEntity.DATA_COUNT);
         this.pos = pos;
         this.data = data;
         this.access = access;
 
-        addSlot(new Slot(feedstock, 0, FEED_SLOT_X, FEED_SLOT_Y) {
+        addSlot(new Slot(catalyst, 0, FEED_SLOT_X, FEED_SLOT_Y) {
             @Override
             public boolean mayPlace(ItemStack stack) {
-                return KeroseneDistillerBlockEntity.isFeedstock(stack);
+                return KeroseneDistillerBlockEntity.isCatalyst(stack);
             }
         });
 
@@ -70,8 +70,16 @@ public class KeroseneDistillerMenu extends AbstractContainerMenu {
         return data.get(1);
     }
 
-    public int getKerosene() {
+    public int getCrude() {
         return data.get(2);
+    }
+
+    public int getKerosene() {
+        return data.get(3);
+    }
+
+    public int getEnergy() {
+        return data.get(4);
     }
 
     @Override
@@ -87,7 +95,7 @@ public class KeroseneDistillerMenu extends AbstractContainerMenu {
                 if (!moveItemStackTo(stack, PLAYER_INVENTORY_START, SLOT_END, true)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (KeroseneDistillerBlockEntity.isFeedstock(stack)) {
+            } else if (KeroseneDistillerBlockEntity.isCatalyst(stack)) {
                 if (!moveItemStackTo(stack, 0, 1, false)) {
                     return ItemStack.EMPTY;
                 }

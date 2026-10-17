@@ -33,6 +33,18 @@ public class ModItems {
                     .stacksTo(1))
     );
 
+    public static final BucketItem CRUDE_OIL_BUCKET = register(
+            "crude_oil_bucket",
+            new BucketItem(ModFluids.CRUDE_OIL_SOURCE, new Item.Properties()
+                    .craftRemainder(Items.BUCKET)
+                    .stacksTo(1))
+    );
+
+    public static final Item CATALYST = register(
+            "catalyst",
+            new Item(new Item.Properties())
+    );
+
     public static final BlockItem FUEL_TANK = register(
             "fuel_tank",
             new BlockItem(ModBlocks.FUEL_TANK_BLOCK, new Item.Properties())
@@ -41,6 +53,16 @@ public class ModItems {
     public static final BlockItem INTAKE = register(
             "intake",
             new BlockItem(ModBlocks.INTAKE_BLOCK, new Item.Properties())
+    );
+
+    public static final BlockItem COAL_GENERATOR = register(
+            "coal_generator",
+            new BlockItem(ModBlocks.COAL_GENERATOR_BLOCK, new Item.Properties())
+    );
+
+    public static final BlockItem POWER_CABLE = register(
+            "power_cable",
+            new BlockItem(ModBlocks.POWER_CABLE_BLOCK, new Item.Properties())
     );
 
     public static final BlockItem KEROSENE_DISTILLER = register(
@@ -64,8 +86,12 @@ public class ModItems {
                     entries.accept(ROCKET_FUEL_BUCKET);
                     entries.accept(OXYGEN_BUCKET);
                     entries.accept(KEROSENE_BUCKET);
+                    entries.accept(CRUDE_OIL_BUCKET);
+                    entries.accept(CATALYST);
                     entries.accept(FUEL_TANK);
                     entries.accept(INTAKE);
+                    entries.accept(COAL_GENERATOR);
+                    entries.accept(POWER_CABLE);
                     entries.accept(KEROSENE_DISTILLER);
                     entries.accept(FUEL_SYNTHESIZER);
                 });

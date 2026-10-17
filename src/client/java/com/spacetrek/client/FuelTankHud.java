@@ -51,6 +51,7 @@ public class FuelTankHud {
             case WATER -> "Water";
             case OXYGEN -> "Oxygen (O2)";
             case KEROSENE -> "Kerosene";
+            case CRUDE_OIL -> "Crude Oil";
             case EMPTY -> "Empty";
         };
         int typeColor = switch (type) {
@@ -58,6 +59,7 @@ public class FuelTankHud {
             case WATER -> 0xFF55AAFF;
             case OXYGEN -> 0xFFAADDFF;
             case KEROSENE -> 0xFFE04848;
+            case CRUDE_OIL -> 0xFF8A8A92;
             case EMPTY -> 0xFF888888;
         };
 

@@ -8,8 +8,8 @@
     "gold": "space-trek:block/fuel_synthesizer/gold",
     "window": "space-trek:block/fuel_synthesizer/window",
     "window_lit": "space-trek:block/fuel_synthesizer/window_lit",
-    "chamber": "space-trek:block/fuel_synthesizer/chamber",
-    "chamber_lit": "space-trek:block/fuel_synthesizer/chamber_lit",
+    "glass": "space-trek:block/fuel_synthesizer/glass",
+    "glass_lit": "space-trek:block/fuel_synthesizer/glass_lit",
     "particle": "space-trek:block/fuel_synthesizer/steel"
   },
   "elements": [
@@ -91,7 +91,7 @@
       ],
       "to": [
         11,
-        12,
+        8,
         13
       ],
       "faces": {
@@ -100,7 +100,7 @@
             0,
             0,
             6,
-            9
+            5
           ],
           "texture": "#steel"
         },
@@ -109,7 +109,7 @@
             0,
             0,
             10,
-            9
+            5
           ],
           "texture": "#steel"
         },
@@ -118,7 +118,7 @@
             0,
             0,
             6,
-            9
+            5
           ],
           "texture": "#steel"
         },
@@ -127,7 +127,7 @@
             0,
             0,
             10,
-            9
+            5
           ],
           "texture": "#steel"
         },
@@ -152,291 +152,153 @@
       }
     },
     {
-      "name": "tank_red",
-      "from": [
-        11,
-        3,
-        4
-      ],
-      "to": [
-        15,
-        12,
-        12
-      ],
-      "faces": {
-        "north": {
-          "uv": [
-            0,
-            0,
-            4,
-            9
-          ],
-          "texture": "#red"
-        },
-        "east": {
-          "uv": [
-            0,
-            0,
-            8,
-            9
-          ],
-          "texture": "#red"
-        },
-        "south": {
-          "uv": [
-            0,
-            0,
-            4,
-            9
-          ],
-          "texture": "#red"
-        },
-        "west": {
-          "uv": [
-            0,
-            0,
-            8,
-            9
-          ],
-          "texture": "#red"
-        },
-        "up": {
-          "uv": [
-            0,
-            0,
-            4,
-            8
-          ],
-          "texture": "#red"
-        },
-        "down": {
-          "uv": [
-            0,
-            0,
-            4,
-            8
-          ],
-          "texture": "#red"
-        }
-      }
-    },
-    {
-      "name": "tank_red_cap",
-      "from": [
-        11.5,
-        12,
-        4.5
-      ],
-      "to": [
-        14.5,
-        13,
-        11.5
-      ],
-      "faces": {
-        "north": {
-          "uv": [
-            0,
-            0,
-            3,
-            1
-          ],
-          "texture": "#dark"
-        },
-        "east": {
-          "uv": [
-            0,
-            0,
-            7,
-            1
-          ],
-          "texture": "#dark"
-        },
-        "south": {
-          "uv": [
-            0,
-            0,
-            3,
-            1
-          ],
-          "texture": "#dark"
-        },
-        "west": {
-          "uv": [
-            0,
-            0,
-            7,
-            1
-          ],
-          "texture": "#dark"
-        },
-        "up": {
-          "uv": [
-            0,
-            0,
-            3,
-            7
-          ],
-          "texture": "#dark"
-        },
-        "down": {
-          "uv": [
-            0,
-            0,
-            3,
-            7
-          ],
-          "texture": "#dark"
-        }
-      }
-    },
-    {
-      "name": "tank_blue",
-      "from": [
-        1,
-        3,
-        4
-      ],
-      "to": [
-        5,
-        12,
-        12
-      ],
-      "faces": {
-        "north": {
-          "uv": [
-            0,
-            0,
-            4,
-            9
-          ],
-          "texture": "#blue"
-        },
-        "east": {
-          "uv": [
-            0,
-            0,
-            8,
-            9
-          ],
-          "texture": "#blue"
-        },
-        "south": {
-          "uv": [
-            0,
-            0,
-            4,
-            9
-          ],
-          "texture": "#blue"
-        },
-        "west": {
-          "uv": [
-            0,
-            0,
-            8,
-            9
-          ],
-          "texture": "#blue"
-        },
-        "up": {
-          "uv": [
-            0,
-            0,
-            4,
-            8
-          ],
-          "texture": "#blue"
-        },
-        "down": {
-          "uv": [
-            0,
-            0,
-            4,
-            8
-          ],
-          "texture": "#blue"
-        }
-      }
-    },
-    {
-      "name": "tank_blue_cap",
-      "from": [
-        1.5,
-        12,
-        4.5
-      ],
-      "to": [
-        4.5,
-        13,
-        11.5
-      ],
-      "faces": {
-        "north": {
-          "uv": [
-            0,
-            0,
-            3,
-            1
-          ],
-          "texture": "#dark"
-        },
-        "east": {
-          "uv": [
-            0,
-            0,
-            7,
-            1
-          ],
-          "texture": "#dark"
-        },
-        "south": {
-          "uv": [
-            0,
-            0,
-            3,
-            1
-          ],
-          "texture": "#dark"
-        },
-        "west": {
-          "uv": [
-            0,
-            0,
-            7,
-            1
-          ],
-          "texture": "#dark"
-        },
-        "up": {
-          "uv": [
-            0,
-            0,
-            3,
-            7
-          ],
-          "texture": "#dark"
-        },
-        "down": {
-          "uv": [
-            0,
-            0,
-            3,
-            7
-          ],
-          "texture": "#dark"
-        }
-      }
-    },
-    {
-      "name": "chamber_frame",
+      "name": "chamber_ring",
       "from": [
         4.5,
-        12,
+        8,
         3.5
       ],
       "to": [
         11.5,
-        13,
+        8.6,
+        12.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            7,
+            0.6
+          ],
+          "texture": "#dark"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            9,
+            0.6
+          ],
+          "texture": "#dark"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            7,
+            0.6
+          ],
+          "texture": "#dark"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            9,
+            0.6
+          ],
+          "texture": "#dark"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            7,
+            9
+          ],
+          "texture": "#dark"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            7,
+            9
+          ],
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "chamber_glass",
+      "from": [
+        5,
+        8.6,
+        4
+      ],
+      "to": [
+        11,
+        14.5,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            6,
+            5.9
+          ],
+          "texture": "#glass"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            8,
+            5.9
+          ],
+          "texture": "#glass"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            6,
+            5.9
+          ],
+          "texture": "#glass"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            8,
+            5.9
+          ],
+          "texture": "#glass"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            6,
+            8
+          ],
+          "texture": "#glass"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            6,
+            8
+          ],
+          "texture": "#glass"
+        }
+      }
+    },
+    {
+      "name": "chamber_cap",
+      "from": [
+        4.5,
+        14.5,
+        3.5
+      ],
+      "to": [
+        11.5,
+        15.5,
         12.5
       ],
       "faces": {
@@ -497,15 +359,15 @@
       }
     },
     {
-      "name": "chamber",
+      "name": "tank_e_bot",
       "from": [
-        5,
-        13,
+        11,
+        3,
         4
       ],
       "to": [
-        11,
-        16,
+        15,
+        3.5,
         12
       ],
       "faces": {
@@ -513,68 +375,620 @@
           "uv": [
             0,
             0,
-            16,
-            16
+            4,
+            0.5
           ],
-          "texture": "#chamber"
+          "texture": "#dark"
         },
         "east": {
           "uv": [
             0,
             0,
-            16,
-            16
+            8,
+            0.5
           ],
-          "texture": "#chamber"
+          "texture": "#dark"
         },
         "south": {
           "uv": [
             0,
             0,
-            16,
-            16
+            4,
+            0.5
           ],
-          "texture": "#chamber"
+          "texture": "#dark"
         },
         "west": {
           "uv": [
             0,
             0,
-            16,
-            16
+            8,
+            0.5
           ],
-          "texture": "#chamber"
+          "texture": "#dark"
         },
         "up": {
           "uv": [
             0,
             0,
-            16,
-            16
+            4,
+            8
           ],
-          "texture": "#chamber"
+          "texture": "#dark"
         },
         "down": {
           "uv": [
             0,
             0,
-            16,
-            16
+            4,
+            8
           ],
-          "texture": "#chamber"
+          "texture": "#dark"
         }
       }
     },
     {
-      "name": "pipe_r",
+      "name": "tank_e_glass",
       "from": [
         11,
-        9,
+        3.5,
+        4
+      ],
+      "to": [
+        15,
+        11.5,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            4,
+            8
+          ],
+          "texture": "#glass"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ],
+          "texture": "#glass"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            4,
+            8
+          ],
+          "texture": "#glass"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ],
+          "texture": "#glass"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            4,
+            8
+          ],
+          "texture": "#glass"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            4,
+            8
+          ],
+          "texture": "#glass"
+        }
+      }
+    },
+    {
+      "name": "tank_e_top",
+      "from": [
+        11,
+        11.5,
+        4
+      ],
+      "to": [
+        15,
+        12.5,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            4,
+            1
+          ],
+          "texture": "#red"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            8,
+            1
+          ],
+          "texture": "#red"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            4,
+            1
+          ],
+          "texture": "#red"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            8,
+            1
+          ],
+          "texture": "#red"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            4,
+            8
+          ],
+          "texture": "#red"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            4,
+            8
+          ],
+          "texture": "#red"
+        }
+      }
+    },
+    {
+      "name": "tank_w_bot",
+      "from": [
+        1,
+        3,
+        4
+      ],
+      "to": [
+        5,
+        3.5,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            4,
+            0.5
+          ],
+          "texture": "#dark"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            8,
+            0.5
+          ],
+          "texture": "#dark"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            4,
+            0.5
+          ],
+          "texture": "#dark"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            8,
+            0.5
+          ],
+          "texture": "#dark"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            4,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            4,
+            8
+          ],
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "tank_w_glass",
+      "from": [
+        1,
+        3.5,
+        4
+      ],
+      "to": [
+        5,
+        11.5,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            4,
+            8
+          ],
+          "texture": "#glass"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ],
+          "texture": "#glass"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            4,
+            8
+          ],
+          "texture": "#glass"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ],
+          "texture": "#glass"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            4,
+            8
+          ],
+          "texture": "#glass"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            4,
+            8
+          ],
+          "texture": "#glass"
+        }
+      }
+    },
+    {
+      "name": "tank_w_top",
+      "from": [
+        1,
+        11.5,
+        4
+      ],
+      "to": [
+        5,
+        12.5,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            4,
+            1
+          ],
+          "texture": "#blue"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            8,
+            1
+          ],
+          "texture": "#blue"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            4,
+            1
+          ],
+          "texture": "#blue"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            8,
+            1
+          ],
+          "texture": "#blue"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            4,
+            8
+          ],
+          "texture": "#blue"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            4,
+            8
+          ],
+          "texture": "#blue"
+        }
+      }
+    },
+    {
+      "name": "out_bot",
+      "from": [
+        6,
+        3,
+        13
+      ],
+      "to": [
+        10,
+        3.5,
+        15
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            4,
+            0.5
+          ],
+          "texture": "#dark"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            2,
+            0.5
+          ],
+          "texture": "#dark"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            4,
+            0.5
+          ],
+          "texture": "#dark"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            2,
+            0.5
+          ],
+          "texture": "#dark"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            4,
+            2
+          ],
+          "texture": "#dark"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            4,
+            2
+          ],
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "out_glass",
+      "from": [
+        6,
+        3.5,
+        13
+      ],
+      "to": [
+        10,
+        7.5,
+        15
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            4,
+            4
+          ],
+          "texture": "#glass"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            2,
+            4
+          ],
+          "texture": "#glass"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            4,
+            4
+          ],
+          "texture": "#glass"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            2,
+            4
+          ],
+          "texture": "#glass"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            4,
+            2
+          ],
+          "texture": "#glass"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            4,
+            2
+          ],
+          "texture": "#glass"
+        }
+      }
+    },
+    {
+      "name": "out_top",
+      "from": [
+        6,
+        7.5,
+        13
+      ],
+      "to": [
+        10,
+        8,
+        15
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            4,
+            0.5
+          ],
+          "texture": "#gold"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            2,
+            0.5
+          ],
+          "texture": "#gold"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            4,
+            0.5
+          ],
+          "texture": "#gold"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            2,
+            0.5
+          ],
+          "texture": "#gold"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            4,
+            2
+          ],
+          "texture": "#gold"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            4,
+            2
+          ],
+          "texture": "#gold"
+        }
+      }
+    },
+    {
+      "name": "pipe_e",
+      "from": [
+        10.5,
+        10,
         7
       ],
       "to": [
-        12,
-        10,
+        11.5,
+        11,
         9
       ],
       "faces": {
@@ -635,15 +1049,15 @@
       }
     },
     {
-      "name": "pipe_b",
+      "name": "pipe_w",
       "from": [
-        4,
-        9,
+        4.5,
+        10,
         7
       ],
       "to": [
-        5,
-        10,
+        5.5,
+        11,
         9
       ],
       "faces": {
@@ -712,7 +1126,7 @@
       ],
       "to": [
         10,
-        10.5,
+        7.5,
         3
       ],
       "faces": {
@@ -730,7 +1144,7 @@
             0,
             0,
             0.5,
-            5
+            2
           ],
           "texture": "#dark"
         },
@@ -739,7 +1153,7 @@
             0,
             0,
             4,
-            5
+            2
           ],
           "texture": "#dark"
         },
@@ -748,7 +1162,7 @@
             0,
             0,
             0.5,
-            5
+            2
           ],
           "texture": "#dark"
         },
@@ -781,7 +1195,7 @@
       ],
       "to": [
         9,
-        6,
+        5,
         2.5
       ],
       "faces": {
@@ -790,7 +1204,7 @@
             0,
             0,
             2,
-            3
+            2
           ],
           "texture": "#gold"
         },
@@ -799,7 +1213,7 @@
             0,
             0,
             2,
-            3
+            2
           ],
           "texture": "#gold"
         },
@@ -808,7 +1222,7 @@
             0,
             0,
             2,
-            3
+            2
           ],
           "texture": "#gold"
         },
@@ -817,7 +1231,7 @@
             0,
             0,
             2,
-            3
+            2
           ],
           "texture": "#gold"
         },
@@ -850,7 +1264,7 @@
       ],
       "to": [
         11,
-        4,
+        3.5,
         3
       ],
       "faces": {
@@ -859,7 +1273,7 @@
             0,
             0,
             6,
-            1
+            0.5
           ],
           "texture": "#dark"
         },
@@ -868,7 +1282,7 @@
             0,
             0,
             3,
-            1
+            0.5
           ],
           "texture": "#dark"
         },
@@ -877,7 +1291,7 @@
             0,
             0,
             6,
-            1
+            0.5
           ],
           "texture": "#dark"
         },
@@ -886,7 +1300,7 @@
             0,
             0,
             3,
-            1
+            0.5
           ],
           "texture": "#dark"
         },
@@ -905,6 +1319,834 @@
             0,
             6,
             3
+          ],
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "tank_e_p1",
+      "from": [
+        11,
+        3.5,
+        4
+      ],
+      "to": [
+        11.5,
+        11.5,
+        4.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "tank_e_p2",
+      "from": [
+        14.5,
+        3.5,
+        4
+      ],
+      "to": [
+        15,
+        11.5,
+        4.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "tank_e_p3",
+      "from": [
+        11,
+        3.5,
+        11.5
+      ],
+      "to": [
+        11.5,
+        11.5,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "tank_e_p4",
+      "from": [
+        14.5,
+        3.5,
+        11.5
+      ],
+      "to": [
+        15,
+        11.5,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "tank_w_p1",
+      "from": [
+        1,
+        3.5,
+        4
+      ],
+      "to": [
+        1.5,
+        11.5,
+        4.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "tank_w_p2",
+      "from": [
+        4.5,
+        3.5,
+        4
+      ],
+      "to": [
+        5,
+        11.5,
+        4.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "tank_w_p3",
+      "from": [
+        1,
+        3.5,
+        11.5
+      ],
+      "to": [
+        1.5,
+        11.5,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "tank_w_p4",
+      "from": [
+        4.5,
+        3.5,
+        11.5
+      ],
+      "to": [
+        5,
+        11.5,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            8
+          ],
+          "texture": "#dark"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "chamber_p1",
+      "from": [
+        5,
+        8.6,
+        4
+      ],
+      "to": [
+        5.5,
+        14.5,
+        4.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            5.9
+          ],
+          "texture": "#dark"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            5.9
+          ],
+          "texture": "#dark"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            5.9
+          ],
+          "texture": "#dark"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            5.9
+          ],
+          "texture": "#dark"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "chamber_p2",
+      "from": [
+        10.5,
+        8.6,
+        4
+      ],
+      "to": [
+        11,
+        14.5,
+        4.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            5.9
+          ],
+          "texture": "#dark"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            5.9
+          ],
+          "texture": "#dark"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            5.9
+          ],
+          "texture": "#dark"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            5.9
+          ],
+          "texture": "#dark"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "chamber_p3",
+      "from": [
+        5,
+        8.6,
+        11.5
+      ],
+      "to": [
+        5.5,
+        14.5,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            5.9
+          ],
+          "texture": "#dark"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            5.9
+          ],
+          "texture": "#dark"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            5.9
+          ],
+          "texture": "#dark"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            5.9
+          ],
+          "texture": "#dark"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "chamber_p4",
+      "from": [
+        10.5,
+        8.6,
+        11.5
+      ],
+      "to": [
+        11,
+        14.5,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            5.9
+          ],
+          "texture": "#dark"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            5.9
+          ],
+          "texture": "#dark"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            5.9
+          ],
+          "texture": "#dark"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            5.9
+          ],
+          "texture": "#dark"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ],
+          "texture": "#dark"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
           ],
           "texture": "#dark"
         }

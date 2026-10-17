@@ -50,6 +50,19 @@ public class ModBlocks {
                             .liquid())
     );
 
+    public static final LiquidBlock CRUDE_OIL_BLOCK = Registry.register(
+            BuiltInRegistries.BLOCK,
+            ResourceLocation.fromNamespaceAndPath("space-trek", "crude_oil"),
+            new LiquidBlock(ModFluids.CRUDE_OIL_SOURCE,
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_BLACK)
+                            .replaceable()
+                            .noCollission()
+                            .strength(100f)
+                            .noLootTable()
+                            .liquid())
+    );
+
     public static final FuelTankBlock FUEL_TANK_BLOCK = Registry.register(
             BuiltInRegistries.BLOCK,
             ResourceLocation.fromNamespaceAndPath("space-trek", "fuel_tank"),
@@ -61,6 +74,22 @@ public class ModBlocks {
             BuiltInRegistries.BLOCK,
             ResourceLocation.fromNamespaceAndPath("space-trek", "intake"),
             new IntakeBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
+                    .noOcclusion())
+    );
+
+    public static final CoalGeneratorBlock COAL_GENERATOR_BLOCK = Registry.register(
+            BuiltInRegistries.BLOCK,
+            ResourceLocation.fromNamespaceAndPath("space-trek", "coal_generator"),
+            new CoalGeneratorBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
+                    .noOcclusion()
+                    .lightLevel(state -> state.getValue(BlockStateProperties.LIT) ? 10 : 0))
+    );
+
+    public static final PowerCableBlock POWER_CABLE_BLOCK = Registry.register(
+            BuiltInRegistries.BLOCK,
+            ResourceLocation.fromNamespaceAndPath("space-trek", "power_cable"),
+            new PowerCableBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
+                    .strength(1.5f)
                     .noOcclusion())
     );
 

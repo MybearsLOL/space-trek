@@ -11,9 +11,11 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
-public class FuelSynthesizerBlockEntity extends BlockEntity {
+public class FuelSynthesizerBlockEntity extends BlockEntity implements PowerAcceptor {
 
     public static final int CAPACITY = 8000;
+    public static final int MAX_ENERGY = 12000;
+    public static final int POWER_PER_TICK = 30;
     public static final int BUCKET_AMOUNT = 1000;
     public static final int PROCESS_TICKS = 200;
     public static final int KEROSENE_COST = 1000;
@@ -24,6 +26,8 @@ public class FuelSynthesizerBlockEntity extends BlockEntity {
     private int oxygen = 0;
     private int rocketFuel = 0;
     private int progress = 0;
+    private int energy = 0;
+    private int syncedEnergy = 0;
 
     public FuelSynthesizerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.FUEL_SYNTHESIZER, pos, state);
@@ -33,6 +37,22 @@ public class FuelSynthesizerBlockEntity extends BlockEntity {
     public int getOxygen() { return oxygen; }
     public int getRocketFuel() { return rocketFuel; }
     public int getProgress() { return progress; }
+    public int getEnergy() { return energy; }
+
+    public float getProgressFraction(float partialTick) {
+        if (progress <= 0) return 0f;
+        float smooth = progress + (getBlockState().getValue(FuelSynthesizerBlock.LIT) ? partialTick : 0f);
+        return Math.min(1f, smooth / PROCESS_TICKS);
+    }
+
+    @Override
+    public int receivePower(int amount) {
+        int accepted = Math.min(amount, MAX_ENERGY - energy);
+        if (accepted <= 0) return 0;
+        energy += accepted;
+        setChanged();
+        return accepted;
+    }
 
     public boolean addKerosene() {
         if (kerosene + BUCKET_AMOUNT > CAPACITY) return false;
@@ -63,32 +83,51 @@ public class FuelSynthesizerBlockEntity extends BlockEntity {
     }
 
     public void serverTick(Level level, BlockPos pos, BlockState state) {
-        boolean changed = false;
+        boolean working = false;
+        boolean needsSync = false;
 
         if (progress > 0) {
-            progress++;
-            if (progress >= PROCESS_TICKS) {
-                progress = 0;
-                rocketFuel = Math.min(CAPACITY, rocketFuel + FUEL_YIELD);
+            if (energy >= POWER_PER_TICK) {
+                energy -= POWER_PER_TICK;
+                progress++;
+                working = true;
+                if (progress >= PROCESS_TICKS) {
+                    progress = 0;
+                    rocketFuel = Math.min(CAPACITY, rocketFuel + FUEL_YIELD);
+                    needsSync = true;
+                } else if (progress % 20 == 0) {
+                    needsSync = true;
+                }
             }
-            changed = true;
-        } else if (kerosene >= KEROSENE_COST && oxygen >= OXYGEN_COST && rocketFuel + FUEL_YIELD <= CAPACITY) {
+        } else if (kerosene >= KEROSENE_COST && oxygen >= OXYGEN_COST
+                && rocketFuel + FUEL_YIELD <= CAPACITY && energy >= POWER_PER_TICK) {
             kerosene -= KEROSENE_COST;
             oxygen -= OXYGEN_COST;
+            energy -= POWER_PER_TICK;
             progress = 1;
-            changed = true;
+            working = true;
+            needsSync = true;
         }
 
-        boolean lit = progress > 0;
-        if (state.getValue(FuelSynthesizerBlock.LIT) != lit) {
-            level.setBlock(pos, state.setValue(FuelSynthesizerBlock.LIT, lit), 3);
+        if (state.getValue(FuelSynthesizerBlock.LIT) != working) {
+            level.setBlock(pos, state.setValue(FuelSynthesizerBlock.LIT, working), 3);
         }
 
-        // Sync about once a second while working, so the HUD stays fresh
-        if (changed && (progress == 0 || progress % 20 == 0 || progress == 1)) {
+        if (!needsSync && level.getGameTime() % 20 == 0 && syncedEnergy != energy) {
+            needsSync = true;
+        }
+
+        if (needsSync) {
+            syncedEnergy = energy;
             sync();
-        } else if (changed) {
+        } else if (working) {
             setChanged();
+        }
+    }
+
+    public void clientTick(Level level, BlockPos pos, BlockState state) {
+        if (state.getValue(FuelSynthesizerBlock.LIT) && progress > 0 && progress < PROCESS_TICKS) {
+            progress++;
         }
     }
 
@@ -99,6 +138,7 @@ public class FuelSynthesizerBlockEntity extends BlockEntity {
         tag.putInt("Oxygen", oxygen);
         tag.putInt("RocketFuel", rocketFuel);
         tag.putInt("Progress", progress);
+        tag.putInt("Energy", energy);
     }
 
     @Override
@@ -108,6 +148,7 @@ public class FuelSynthesizerBlockEntity extends BlockEntity {
         oxygen = tag.getInt("Oxygen");
         rocketFuel = tag.getInt("RocketFuel");
         progress = tag.getInt("Progress");
+        energy = tag.getInt("Energy");
     }
 
     @Nullable

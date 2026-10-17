@@ -55,16 +55,32 @@ public class SpaceTrekClient implements ClientModInitializer {
 				ModFluids.KEROSENE_FLOWING
 		);
 
+		FluidRenderHandlerRegistry.INSTANCE.register(
+				ModFluids.CRUDE_OIL_SOURCE,
+				ModFluids.CRUDE_OIL_FLOWING,
+				SimpleFluidRenderHandler.coloredWater(0x1B1A1A)
+		);
+		BlockRenderLayerMap.INSTANCE.putFluids(
+				RenderType.translucent(),
+				ModFluids.CRUDE_OIL_SOURCE,
+				ModFluids.CRUDE_OIL_FLOWING
+		);
+
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.FUEL_TANK_BLOCK, RenderType.translucent());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.INTAKE_BLOCK, RenderType.cutout());
 
-		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.KEROSENE_DISTILLER_BLOCK, RenderType.cutout());
-		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.FUEL_SYNTHESIZER_BLOCK, RenderType.cutout());
+		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.KEROSENE_DISTILLER_BLOCK, RenderType.translucent());
+		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.FUEL_SYNTHESIZER_BLOCK, RenderType.translucent());
+		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.COAL_GENERATOR_BLOCK, RenderType.cutout());
+		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.POWER_CABLE_BLOCK, RenderType.cutout());
 
 		BlockEntityRenderers.register(ModBlockEntities.FUEL_TANK, FuelTankBlockEntityRenderer::new);
 		BlockEntityRenderers.register(ModBlockEntities.INTAKE, IntakeBlockEntityRenderer::new);
 		MenuScreens.register(ModMenuTypes.INTAKE, IntakeScreen::new);
 		MenuScreens.register(ModMenuTypes.KEROSENE_DISTILLER, KeroseneDistillerScreen::new);
+		MenuScreens.register(ModMenuTypes.COAL_GENERATOR, CoalGeneratorScreen::new);
+		BlockEntityRenderers.register(ModBlockEntities.KEROSENE_DISTILLER, KeroseneDistillerRenderer::new);
+		BlockEntityRenderers.register(ModBlockEntities.FUEL_SYNTHESIZER, FuelSynthesizerRenderer::new);
 
 		HudRenderCallback.EVENT.register((gui, deltaTracker) -> {
 			float partial = deltaTracker.getGameTimeDeltaPartialTick(true);

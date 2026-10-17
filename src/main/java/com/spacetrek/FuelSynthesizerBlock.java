@@ -28,7 +28,7 @@ import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
 
-public class FuelSynthesizerBlock extends Block implements EntityBlock {
+public class FuelSynthesizerBlock extends Block implements EntityBlock, PowerConnectable {
 
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
@@ -68,7 +68,10 @@ public class FuelSynthesizerBlock extends Block implements EntityBlock {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        if (level.isClientSide || type != ModBlockEntities.FUEL_SYNTHESIZER) return null;
+        if (type != ModBlockEntities.FUEL_SYNTHESIZER) return null;
+        if (level.isClientSide) {
+            return (lvl, pos, st, be) -> ((FuelSynthesizerBlockEntity) be).clientTick(lvl, pos, st);
+        }
         return (lvl, pos, st, be) -> ((FuelSynthesizerBlockEntity) be).serverTick(lvl, pos, st);
     }
 

@@ -55,6 +55,10 @@ public class FuelTankBlockEntityRenderer implements BlockEntityRenderer<FuelTank
                 sprite = fluidSprite(ModFluids.KEROSENE_SOURCE);
                 r = 0.85f; g = 0.12f; b = 0.1f;
             }
+            case CRUDE_OIL -> {
+                sprite = fluidSprite(ModFluids.CRUDE_OIL_SOURCE);
+                r = 0.12f; g = 0.1f; b = 0.1f;
+            }
             default -> {
                 sprite = getWhiteSprite();
                 r = 1.0f; g = 1.0f; b = 1.0f;
