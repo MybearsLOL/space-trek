@@ -97,10 +97,10 @@ public class CoalGeneratorBlockEntity extends BlockEntity implements ExtendedScr
             if (time > 0) {
                 burnTotal = time;
                 burnTime = time;
-                if (stack.getCount() > 1 || !stack.hasCraftingRemainingItem()) {
-                    fuelSlot.removeItem(0, 1);
+                if (stack.is(Items.LAVA_BUCKET)) {
+                    fuelSlot.setItem(0, new ItemStack(Items.BUCKET));
                 } else {
-                    fuelSlot.setItem(0, stack.getCraftingRemainingItem());
+                    fuelSlot.removeItem(0, 1);
                 }
                 dirty = true;
             }
