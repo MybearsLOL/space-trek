@@ -22,7 +22,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 public class KeroseneDistillerBlockEntity extends BlockEntity
-        implements ExtendedScreenHandlerFactory<BlockPos>, PowerAcceptor {
+        implements ExtendedScreenHandlerFactory<BlockPos>, PowerAcceptor, FluidSink {
 
     public static final int DATA_COUNT = 5;
     public static final int MAX_FLUID = 8000;
@@ -111,6 +111,11 @@ public class KeroseneDistillerBlockEntity extends BlockEntity
         return accepted;
     }
 
+    @Override
+    public boolean acceptBucket(FuelTankBlockEntity.FluidType type) {
+        return type == FuelTankBlockEntity.FluidType.COOLED_CRUDE && addCrude();
+    }
+
     public boolean addCrude() {
         if (crude + BUCKET_AMOUNT > MAX_FLUID) return false;
         crude += BUCKET_AMOUNT;
@@ -161,6 +166,12 @@ public class KeroseneDistillerBlockEntity extends BlockEntity
             energy -= POWER_PER_TICK;
             progress = 1;
             working = true;
+            needsSync = true;
+        }
+
+        if (kerosene >= BUCKET_AMOUNT && level.getGameTime() % 20 == 0
+                && FluidNetwork.pushBucket(level, pos, FuelTankBlockEntity.FluidType.KEROSENE)) {
+            kerosene -= BUCKET_AMOUNT;
             needsSync = true;
         }
 

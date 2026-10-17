@@ -38,5 +38,17 @@ public class ModBlockEntities {
                     FabricBlockEntityTypeBuilder.create(FuelSynthesizerBlockEntity::new,
                             ModBlocks.FUEL_SYNTHESIZER_BLOCK).build());
 
+    public static final BlockEntityType<CoolerControllerBlockEntity> COOLER_CONTROLLER =
+            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
+                    ResourceLocation.fromNamespaceAndPath("space-trek", "cooler_controller"),
+                    FabricBlockEntityTypeBuilder.create(CoolerControllerBlockEntity::new,
+                            ModBlocks.COOLER_CONTROLLER_BLOCK).build());
+
+    public static final BlockEntityType<CoolerPortBlockEntity> COOLER_PORT =
+            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
+                    ResourceLocation.fromNamespaceAndPath("space-trek", "cooler_port"),
+                    FabricBlockEntityTypeBuilder.create(CoolerPortBlockEntity::new,
+                            ModBlocks.COOLER_PORT_BLOCK).build());
+
     public static void initialize() {}
 }

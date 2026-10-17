@@ -10,11 +10,18 @@
   "block.space-trek.kerosene_distiller": "Kerosene Distiller",
   "block.space-trek.fuel_synthesizer": "Fuel Synthesizer",
   "gui.space-trek.kerosene_distiller.kerosene": "Kerosene: %s / %s buckets",
-  "item.space-trek.crude_oil_bucket": "Crude Oil Bucket",
+  "item.space-trek.crude_oil_bucket": "Hot Crude Oil Bucket",
   "item.space-trek.catalyst": "Cracking Catalyst",
-  "block.space-trek.crude_oil": "Crude Oil",
+  "block.space-trek.crude_oil": "Hot Crude Oil",
   "block.space-trek.coal_generator": "Coal Generator",
   "block.space-trek.power_cable": "Power Cable",
   "gui.space-trek.energy": "Energy: %s / %s",
-  "gui.space-trek.kerosene_distiller.crude": "Crude oil: %s / %s buckets"
+  "gui.space-trek.kerosene_distiller.crude": "Crude oil: %s / %s buckets",
+  "item.space-trek.cooled_crude_bucket": "Cooled Crude Oil Bucket",
+  "block.space-trek.cooled_crude": "Cooled Crude Oil",
+  "block.space-trek.fluid_pipe": "Fluid Pipe",
+  "block.space-trek.cooler_controller": "Cryo Cooler",
+  "block.space-trek.cooler_casing": "Cooler Casing",
+  "block.space-trek.cooler_port": "Cooler Port",
+  "message.space-trek.cooler_incomplete": "Cryo Cooler incomplete: build a 3x2x2 casing frame, controller at front-bottom centre, ports at both back-bottom corners"
 }

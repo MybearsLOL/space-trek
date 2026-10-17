@@ -40,6 +40,13 @@ public class ModItems {
                     .stacksTo(1))
     );
 
+    public static final BucketItem COOLED_CRUDE_BUCKET = register(
+            "cooled_crude_bucket",
+            new BucketItem(ModFluids.COOLED_CRUDE_SOURCE, new Item.Properties()
+                    .craftRemainder(Items.BUCKET)
+                    .stacksTo(1))
+    );
+
     public static final Item CATALYST = register(
             "catalyst",
             new Item(new Item.Properties())
@@ -75,6 +82,26 @@ public class ModItems {
             new BlockItem(ModBlocks.FUEL_SYNTHESIZER_BLOCK, new Item.Properties())
     );
 
+    public static final BlockItem FLUID_PIPE = register(
+            "fluid_pipe",
+            new BlockItem(ModBlocks.FLUID_PIPE_BLOCK, new Item.Properties())
+    );
+
+    public static final BlockItem COOLER_CASING = register(
+            "cooler_casing",
+            new BlockItem(ModBlocks.COOLER_CASING_BLOCK, new Item.Properties())
+    );
+
+    public static final BlockItem COOLER_PORT = register(
+            "cooler_port",
+            new BlockItem(ModBlocks.COOLER_PORT_BLOCK, new Item.Properties())
+    );
+
+    public static final BlockItem COOLER_CONTROLLER = register(
+            "cooler_controller",
+            new BlockItem(ModBlocks.COOLER_CONTROLLER_BLOCK, new Item.Properties())
+    );
+
     private static <T extends Item> T register(String name, T item) {
         return Registry.register(BuiltInRegistries.ITEM,
                 ResourceLocation.fromNamespaceAndPath("space-trek", name), item);
@@ -87,11 +114,16 @@ public class ModItems {
                     entries.accept(OXYGEN_BUCKET);
                     entries.accept(KEROSENE_BUCKET);
                     entries.accept(CRUDE_OIL_BUCKET);
+                    entries.accept(COOLED_CRUDE_BUCKET);
                     entries.accept(CATALYST);
                     entries.accept(FUEL_TANK);
                     entries.accept(INTAKE);
                     entries.accept(COAL_GENERATOR);
                     entries.accept(POWER_CABLE);
+                    entries.accept(FLUID_PIPE);
+                    entries.accept(COOLER_CONTROLLER);
+                    entries.accept(COOLER_CASING);
+                    entries.accept(COOLER_PORT);
                     entries.accept(KEROSENE_DISTILLER);
                     entries.accept(FUEL_SYNTHESIZER);
                 });

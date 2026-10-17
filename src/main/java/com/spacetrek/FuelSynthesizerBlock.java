@@ -28,7 +28,7 @@ import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
 
-public class FuelSynthesizerBlock extends Block implements EntityBlock, PowerConnectable {
+public class FuelSynthesizerBlock extends Block implements EntityBlock, PowerConnectable, FluidConnectable {
 
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty LIT = BlockStateProperties.LIT;

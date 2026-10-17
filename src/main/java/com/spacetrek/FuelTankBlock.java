@@ -26,7 +26,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
 
-public class FuelTankBlock extends Block implements EntityBlock {
+public class FuelTankBlock extends Block implements EntityBlock, FluidConnectable {
 
     public static final BooleanProperty NORTH = BlockStateProperties.NORTH;
     public static final BooleanProperty EAST = BlockStateProperties.EAST;
@@ -165,6 +165,7 @@ public class FuelTankBlock extends Block implements EntityBlock {
         if (stack.is(ModItems.OXYGEN_BUCKET)) return FuelTankBlockEntity.FluidType.OXYGEN;
         if (stack.is(ModItems.KEROSENE_BUCKET)) return FuelTankBlockEntity.FluidType.KEROSENE;
         if (stack.is(ModItems.CRUDE_OIL_BUCKET)) return FuelTankBlockEntity.FluidType.CRUDE_OIL;
+        if (stack.is(ModItems.COOLED_CRUDE_BUCKET)) return FuelTankBlockEntity.FluidType.COOLED_CRUDE;
         return null;
     }
 }

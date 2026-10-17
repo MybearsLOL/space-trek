@@ -28,7 +28,7 @@ import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
 
-public class IntakeBlock extends Block implements EntityBlock {
+public class IntakeBlock extends Block implements EntityBlock, FluidConnectable {
 
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
 

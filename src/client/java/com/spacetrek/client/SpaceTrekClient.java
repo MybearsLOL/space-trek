@@ -66,12 +66,26 @@ public class SpaceTrekClient implements ClientModInitializer {
 				ModFluids.CRUDE_OIL_FLOWING
 		);
 
+		FluidRenderHandlerRegistry.INSTANCE.register(
+				ModFluids.COOLED_CRUDE_SOURCE,
+				ModFluids.COOLED_CRUDE_FLOWING,
+				SimpleFluidRenderHandler.coloredWater(0x5A3A22)
+		);
+		BlockRenderLayerMap.INSTANCE.putFluids(
+				RenderType.translucent(),
+				ModFluids.COOLED_CRUDE_SOURCE,
+				ModFluids.COOLED_CRUDE_FLOWING
+		);
+
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.FUEL_TANK_BLOCK, RenderType.translucent());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.INTAKE_BLOCK, RenderType.cutout());
 
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.KEROSENE_DISTILLER_BLOCK, RenderType.translucent());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.FUEL_SYNTHESIZER_BLOCK, RenderType.translucent());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.COAL_GENERATOR_BLOCK, RenderType.cutout());
+		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.FLUID_PIPE_BLOCK, RenderType.cutout());
+		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.COOLER_CONTROLLER_BLOCK, RenderType.translucent());
+		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.COOLER_PORT_BLOCK, RenderType.cutout());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.POWER_CABLE_BLOCK, RenderType.cutout());
 
 		BlockEntityRenderers.register(ModBlockEntities.FUEL_TANK, FuelTankBlockEntityRenderer::new);
@@ -81,11 +95,13 @@ public class SpaceTrekClient implements ClientModInitializer {
 		MenuScreens.register(ModMenuTypes.COAL_GENERATOR, CoalGeneratorScreen::new);
 		BlockEntityRenderers.register(ModBlockEntities.KEROSENE_DISTILLER, KeroseneDistillerRenderer::new);
 		BlockEntityRenderers.register(ModBlockEntities.FUEL_SYNTHESIZER, FuelSynthesizerRenderer::new);
+		BlockEntityRenderers.register(ModBlockEntities.COOLER_CONTROLLER, CoolerRenderer::new);
 
 		HudRenderCallback.EVENT.register((gui, deltaTracker) -> {
 			float partial = deltaTracker.getGameTimeDeltaPartialTick(true);
 			FuelTankHud.render(gui, partial);
 			SynthesizerHud.render(gui, partial);
+			CoolerHud.render(gui, partial);
 		});
 
 		// Live planet editing: edit config/space-trek-planets.json while the game runs

@@ -5,6 +5,10 @@
     "space-trek:fuel_synthesizer",
     "space-trek:intake",
     "space-trek:coal_generator",
-    "space-trek:power_cable"
+    "space-trek:power_cable",
+    "space-trek:fluid_pipe",
+    "space-trek:cooler_casing",
+    "space-trek:cooler_port",
+    "space-trek:cooler_controller"
   ]
 }

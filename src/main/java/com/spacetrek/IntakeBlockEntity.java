@@ -164,6 +164,12 @@ public class IntakeBlockEntity extends BlockEntity implements ExtendedScreenHand
         if (producing != wasProducing) dirty = true;
         if (producing && level.getGameTime() % RESYNC_INTERVAL == 0) dirty = true;
 
+        if (oxygen >= BUCKET_AMOUNT && level.getGameTime() % 20 == 0
+                && FluidNetwork.pushBucket(level, pos, FuelTankBlockEntity.FluidType.OXYGEN)) {
+            oxygen -= BUCKET_AMOUNT;
+            dirty = true;
+        }
+
         if (dirty) {
             setChanged();
             level.sendBlockUpdated(pos, state, state, 3);

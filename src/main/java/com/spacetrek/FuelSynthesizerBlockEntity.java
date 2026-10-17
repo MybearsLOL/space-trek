@@ -11,7 +11,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
-public class FuelSynthesizerBlockEntity extends BlockEntity implements PowerAcceptor {
+public class FuelSynthesizerBlockEntity extends BlockEntity implements PowerAcceptor, FluidSink {
 
     public static final int CAPACITY = 8000;
     public static final int MAX_ENERGY = 12000;
@@ -52,6 +52,15 @@ public class FuelSynthesizerBlockEntity extends BlockEntity implements PowerAcce
         energy += accepted;
         setChanged();
         return accepted;
+    }
+
+    @Override
+    public boolean acceptBucket(FuelTankBlockEntity.FluidType type) {
+        return switch (type) {
+            case KEROSENE -> addKerosene();
+            case OXYGEN -> addOxygen();
+            default -> false;
+        };
     }
 
     public boolean addKerosene() {
@@ -106,6 +115,12 @@ public class FuelSynthesizerBlockEntity extends BlockEntity implements PowerAcce
             energy -= POWER_PER_TICK;
             progress = 1;
             working = true;
+            needsSync = true;
+        }
+
+        if (rocketFuel >= BUCKET_AMOUNT && level.getGameTime() % 20 == 0
+                && FluidNetwork.pushBucket(level, pos, FuelTankBlockEntity.FluidType.ROCKET_FUEL)) {
+            rocketFuel -= BUCKET_AMOUNT;
             needsSync = true;
         }
 

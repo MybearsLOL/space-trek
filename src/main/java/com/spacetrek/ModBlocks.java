@@ -53,9 +53,23 @@ public class ModBlocks {
     public static final LiquidBlock CRUDE_OIL_BLOCK = Registry.register(
             BuiltInRegistries.BLOCK,
             ResourceLocation.fromNamespaceAndPath("space-trek", "crude_oil"),
-            new LiquidBlock(ModFluids.CRUDE_OIL_SOURCE,
+            new HotLiquidBlock(ModFluids.CRUDE_OIL_SOURCE,
                     BlockBehaviour.Properties.of()
                             .mapColor(MapColor.COLOR_BLACK)
+                            .replaceable()
+                            .noCollission()
+                            .strength(100f)
+                            .noLootTable()
+                            .liquid(),
+                    2.0f)
+    );
+
+    public static final LiquidBlock COOLED_CRUDE_BLOCK = Registry.register(
+            BuiltInRegistries.BLOCK,
+            ResourceLocation.fromNamespaceAndPath("space-trek", "cooled_crude"),
+            new LiquidBlock(ModFluids.COOLED_CRUDE_SOURCE,
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_BROWN)
                             .replaceable()
                             .noCollission()
                             .strength(100f)
@@ -107,6 +121,34 @@ public class ModBlocks {
             new FuelSynthesizerBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
                     .noOcclusion()
                     .lightLevel(state -> state.getValue(BlockStateProperties.LIT) ? 9 : 0))
+    );
+
+    public static final FluidPipeBlock FLUID_PIPE_BLOCK = Registry.register(
+            BuiltInRegistries.BLOCK,
+            ResourceLocation.fromNamespaceAndPath("space-trek", "fluid_pipe"),
+            new FluidPipeBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
+                    .strength(1.5f)
+                    .noOcclusion())
+    );
+
+    public static final CoolerCasingBlock COOLER_CASING_BLOCK = Registry.register(
+            BuiltInRegistries.BLOCK,
+            ResourceLocation.fromNamespaceAndPath("space-trek", "cooler_casing"),
+            new CoolerCasingBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK))
+    );
+
+    public static final CoolerPortBlock COOLER_PORT_BLOCK = Registry.register(
+            BuiltInRegistries.BLOCK,
+            ResourceLocation.fromNamespaceAndPath("space-trek", "cooler_port"),
+            new CoolerPortBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK))
+    );
+
+    public static final CoolerControllerBlock COOLER_CONTROLLER_BLOCK = Registry.register(
+            BuiltInRegistries.BLOCK,
+            ResourceLocation.fromNamespaceAndPath("space-trek", "cooler_controller"),
+            new CoolerControllerBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
+                    .noOcclusion()
+                    .lightLevel(state -> state.getValue(BlockStateProperties.LIT) ? 7 : 0))
     );
 
     public static void initialize() {}

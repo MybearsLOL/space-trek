@@ -30,7 +30,7 @@ import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
 
-public class KeroseneDistillerBlock extends Block implements EntityBlock, PowerConnectable {
+public class KeroseneDistillerBlock extends Block implements EntityBlock, PowerConnectable, FluidConnectable {
 
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
@@ -80,7 +80,7 @@ public class KeroseneDistillerBlock extends Block implements EntityBlock, PowerC
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
                                               Player player, InteractionHand hand, BlockHitResult hit) {
-        boolean pouring = stack.is(ModItems.CRUDE_OIL_BUCKET);
+        boolean pouring = stack.is(ModItems.COOLED_CRUDE_BUCKET);
         boolean taking = stack.is(Items.BUCKET);
         if (!pouring && !taking) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 

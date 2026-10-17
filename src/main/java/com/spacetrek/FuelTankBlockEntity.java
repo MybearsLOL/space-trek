@@ -21,9 +21,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
-public class FuelTankBlockEntity extends BlockEntity {
+public class FuelTankBlockEntity extends BlockEntity implements FluidSink {
 
-    public enum FluidType { EMPTY, WATER, ROCKET_FUEL, OXYGEN, KEROSENE, CRUDE_OIL }
+    public enum FluidType { EMPTY, WATER, ROCKET_FUEL, OXYGEN, KEROSENE, CRUDE_OIL, COOLED_CRUDE }
 
     public static final int MB_PER_BUCKET = 1000;
     public static final int BLOCK_CAPACITY_MB = 16 * MB_PER_BUCKET;
@@ -43,6 +43,12 @@ public class FuelTankBlockEntity extends BlockEntity {
     public int getGroupBuckets() { return groupTotalMb / MB_PER_BUCKET; }
     public int getGroupCapacityBuckets() { return groupCapacityMb / MB_PER_BUCKET; }
     public int getGroupBlocks() { return Math.max(1, groupCapacityMb / BLOCK_CAPACITY_MB); }
+
+    @Override
+    public boolean acceptBucket(FluidType type) {
+        if (level == null || level.isClientSide) return false;
+        return canFill(type) && fillGroup(level, worldPosition, type);
+    }
 
     public boolean canFill(FluidType type) {
         if (fluidType != FluidType.EMPTY && fluidType != type) return false;
@@ -166,6 +172,7 @@ public class FuelTankBlockEntity extends BlockEntity {
             case OXYGEN -> new ItemStack(ModItems.OXYGEN_BUCKET);
             case KEROSENE -> new ItemStack(ModItems.KEROSENE_BUCKET);
             case CRUDE_OIL -> new ItemStack(ModItems.CRUDE_OIL_BUCKET);
+            case COOLED_CRUDE -> new ItemStack(ModItems.COOLED_CRUDE_BUCKET);
             default -> null;
         };
         if (result == null) return null;
