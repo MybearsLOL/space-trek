@@ -15,7 +15,35 @@ public final class FluidNetwork {
 
     private static final int MAX_NODES = 256;
 
+    public record PipeNode(BlockPos pos, int distance) {
+    }
+
     private FluidNetwork() {
+    }
+
+    public static List<PipeNode> collectPipes(Level level, BlockPos source) {
+        List<PipeNode> result = new ArrayList<>();
+        Set<BlockPos> visited = new HashSet<>();
+        Deque<PipeNode> queue = new ArrayDeque<>();
+
+        BlockPos start = source.immutable();
+        visited.add(start);
+        queue.add(new PipeNode(start, 0));
+
+        while (!queue.isEmpty() && visited.size() < MAX_NODES) {
+            PipeNode current = queue.poll();
+            for (Direction direction : Direction.values()) {
+                BlockPos next = current.pos().relative(direction);
+                if (!visited.add(next)) continue;
+                if (!level.hasChunkAt(next)) continue;
+                if (level.getBlockState(next).getBlock() instanceof FluidPipeBlock) {
+                    PipeNode node = new PipeNode(next, current.distance() + 1);
+                    result.add(node);
+                    queue.add(node);
+                }
+            }
+        }
+        return result;
     }
 
     public static boolean pushBucket(Level level, BlockPos source, FuelTankBlockEntity.FluidType type) {

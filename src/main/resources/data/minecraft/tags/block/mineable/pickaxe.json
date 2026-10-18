@@ -10,6 +10,7 @@
     "space-trek:cooler_casing",
     "space-trek:cooler_port",
     "space-trek:cooler_controller",
-    "space-trek:holo_projector"
+    "space-trek:holo_projector",
+    "space-trek:fluid_pump"
   ]
 }

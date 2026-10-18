@@ -159,5 +159,13 @@ public class ModBlocks {
                     .lightLevel(state -> 8))
     );
 
+    public static final FluidPumpBlock FLUID_PUMP_BLOCK = Registry.register(
+            BuiltInRegistries.BLOCK,
+            ResourceLocation.fromNamespaceAndPath("space-trek", "fluid_pump"),
+            new FluidPumpBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
+                    .noOcclusion()
+                    .lightLevel(state -> state.getValue(FluidPumpBlock.ACTIVE) ? 5 : 0))
+    );
+
     public static void initialize() {}
 }

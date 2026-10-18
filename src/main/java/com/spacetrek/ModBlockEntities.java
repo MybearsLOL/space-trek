@@ -56,5 +56,11 @@ public class ModBlockEntities {
                     FabricBlockEntityTypeBuilder.create(HoloProjectorBlockEntity::new,
                             ModBlocks.HOLO_PROJECTOR_BLOCK).build());
 
+    public static final BlockEntityType<FluidPumpBlockEntity> FLUID_PUMP =
+            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
+                    ResourceLocation.fromNamespaceAndPath("space-trek", "fluid_pump"),
+                    FabricBlockEntityTypeBuilder.create(FluidPumpBlockEntity::new,
+                            ModBlocks.FLUID_PUMP_BLOCK).build());
+
     public static void initialize() {}
 }
