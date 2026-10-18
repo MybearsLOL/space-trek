@@ -26,6 +26,12 @@ public class ModBlockEntities {
                     FabricBlockEntityTypeBuilder.create(CoalGeneratorBlockEntity::new,
                             ModBlocks.COAL_GENERATOR_BLOCK).build());
 
+    public static final BlockEntityType<SolarPanelBlockEntity> SOLAR_PANEL =
+            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
+                    ResourceLocation.fromNamespaceAndPath("space-trek", "solar_panel"),
+                    FabricBlockEntityTypeBuilder.create(SolarPanelBlockEntity::new,
+                            ModBlocks.SOLAR_PANEL_BLOCK).build());
+
     public static final BlockEntityType<KeroseneDistillerBlockEntity> KEROSENE_DISTILLER =
             Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
                     ResourceLocation.fromNamespaceAndPath("space-trek", "kerosene_distiller"),

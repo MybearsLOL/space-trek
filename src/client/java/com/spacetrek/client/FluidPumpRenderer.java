@@ -15,12 +15,21 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluids;
 
 public class FluidPumpRenderer implements BlockEntityRenderer<FluidPumpBlockEntity> {
+
+    private static final int SLUGS = 4;
+    private static final float SPEED = 0.9f;
+    private static final float SLUG_LENGTH = 2.6f;
+    private static final float HALF = 2.4f;
 
     public FluidPumpRenderer(BlockEntityRendererProvider.Context ctx) {
     }
@@ -79,46 +88,56 @@ public class FluidPumpRenderer implements BlockEntityRenderer<FluidPumpBlockEnti
         VertexConsumer vc = bufferSource.getBuffer(RenderType.translucent());
         PoseStack.Pose pose = poseStack.last();
 
-        for (FluidNetwork.PipeNode node : entity.getClientPipes(level)) {
+        List<FluidNetwork.PipeNode> nodes = entity.getClientPipes(level);
+        Map<BlockPos, Integer> distances = new HashMap<>();
+        for (FluidNetwork.PipeNode node : nodes) {
+            distances.put(node.pos(), node.distance());
+        }
+
+        for (FluidNetwork.PipeNode node : nodes) {
             BlockState pipe = level.getBlockState(node.pos());
             if (!(pipe.getBlock() instanceof FluidPipeBlock)) continue;
 
-            float wave = 0.5f + 0.5f * (float) Math.sin(time * 0.32f - node.distance() * 0.9f);
-            float e = 0.15f + 1.15f * wave;
-            float t = 0.1f + e * 0.7f;
             float ox = (node.pos().getX() - origin.getX()) * 16f;
             float oy = (node.pos().getY() - origin.getY()) * 16f;
             float oz = (node.pos().getZ() - origin.getZ()) * 16f;
             int light = LevelRenderer.getLightColor(level, node.pos());
-            float a = 0.55f + 0.3f * wave;
 
-            MachineRender.box(vc, pose, fluid, ox + 5f - e, oy + 5f - e, oz + 5f - e, ox + 11f + e, oy + 11f + e, oz + 11f + e,
-                    color[0], color[1], color[2], a, light, packedOverlay);
+            for (Direction dir : Direction.values()) {
+                if (!connected(pipe, dir)) continue;
+                Integer next = distances.get(node.pos().relative(dir));
+                if (next == null || next <= node.distance()) continue;
 
-            if (pipe.getValue(FluidPipeBlock.NORTH)) {
-                MachineRender.box(vc, pose, fluid, ox + 6f - t, oy + 6f - t, oz, ox + 10f + t, oy + 10f + t, oz + 5f,
-                        color[0], color[1], color[2], a, light, packedOverlay);
-            }
-            if (pipe.getValue(FluidPipeBlock.SOUTH)) {
-                MachineRender.box(vc, pose, fluid, ox + 6f - t, oy + 6f - t, oz + 11f, ox + 10f + t, oy + 10f + t, oz + 16f,
-                        color[0], color[1], color[2], a, light, packedOverlay);
-            }
-            if (pipe.getValue(FluidPipeBlock.WEST)) {
-                MachineRender.box(vc, pose, fluid, ox, oy + 6f - t, oz + 6f - t, ox + 5f, oy + 10f + t, oz + 10f + t,
-                        color[0], color[1], color[2], a, light, packedOverlay);
-            }
-            if (pipe.getValue(FluidPipeBlock.EAST)) {
-                MachineRender.box(vc, pose, fluid, ox + 11f, oy + 6f - t, oz + 6f - t, ox + 16f, oy + 10f + t, oz + 10f + t,
-                        color[0], color[1], color[2], a, light, packedOverlay);
-            }
-            if (pipe.getValue(FluidPipeBlock.UP)) {
-                MachineRender.box(vc, pose, fluid, ox + 6f - t, oy + 11f, oz + 6f - t, ox + 10f + t, oy + 16f, oz + 10f + t,
-                        color[0], color[1], color[2], a, light, packedOverlay);
-            }
-            if (pipe.getValue(FluidPipeBlock.DOWN)) {
-                MachineRender.box(vc, pose, fluid, ox + 6f - t, oy, oz + 6f - t, ox + 10f + t, oy + 5f, oz + 10f + t,
-                        color[0], color[1], color[2], a, light, packedOverlay);
+                for (int k = 0; k < SLUGS; k++) {
+                    float s = (time * SPEED + k * (16f / SLUGS)) % 16f;
+                    float c0 = 8f + s;
+                    float c1 = c0 + SLUG_LENGTH;
+                    float a0 = 8f - HALF;
+                    float a1 = 8f + HALF;
+                    float x0 = a0, x1 = a1, y0 = a0, y1 = a1, z0 = a0, z1 = a1;
+                    switch (dir) {
+                        case NORTH -> { z0 = 16f - c1; z1 = 16f - c0; }
+                        case SOUTH -> { z0 = c0; z1 = c1; }
+                        case WEST -> { x0 = 16f - c1; x1 = 16f - c0; }
+                        case EAST -> { x0 = c0; x1 = c1; }
+                        case UP -> { y0 = c0; y1 = c1; }
+                        default -> { y0 = 16f - c1; y1 = 16f - c0; }
+                    }
+                    MachineRender.box(vc, pose, fluid, ox + x0, oy + y0, oz + z0, ox + x1, oy + y1, oz + z1,
+                            color[0], color[1], color[2], 0.85f, light, packedOverlay);
+                }
             }
         }
+    }
+
+    private static boolean connected(BlockState pipe, Direction dir) {
+        return switch (dir) {
+            case NORTH -> pipe.getValue(FluidPipeBlock.NORTH);
+            case SOUTH -> pipe.getValue(FluidPipeBlock.SOUTH);
+            case WEST -> pipe.getValue(FluidPipeBlock.WEST);
+            case EAST -> pipe.getValue(FluidPipeBlock.EAST);
+            case UP -> pipe.getValue(FluidPipeBlock.UP);
+            case DOWN -> pipe.getValue(FluidPipeBlock.DOWN);
+        };
     }
 }

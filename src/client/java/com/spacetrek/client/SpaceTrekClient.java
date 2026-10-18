@@ -83,6 +83,7 @@ public class SpaceTrekClient implements ClientModInitializer {
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.KEROSENE_DISTILLER_BLOCK, RenderType.translucent());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.FUEL_SYNTHESIZER_BLOCK, RenderType.translucent());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.COAL_GENERATOR_BLOCK, RenderType.cutout());
+		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.SOLAR_PANEL_BLOCK, RenderType.cutout());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.FLUID_PIPE_BLOCK, RenderType.cutout());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.FLUID_PUMP_BLOCK, RenderType.cutout());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.HOLO_PROJECTOR_BLOCK, RenderType.translucent());

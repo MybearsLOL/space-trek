@@ -26,5 +26,11 @@
   "message.space-trek.cooler_incomplete": "Cryo Cooler incomplete: build a 3x2x2 casing frame, controller at front-bottom centre, ports at both back-bottom corners",
   "block.space-trek.holo_projector": "Holo Projector",
   "message.space-trek.holo_rotated": "Hologram rotated",
-  "block.space-trek.fluid_pump": "Fluid Pump"
+  "block.space-trek.fluid_pump": "Fluid Pump",
+  "block.space-trek.solar_panel": "Solar Panel",
+  "message.space-trek.solar_output": "Solar Panel: %s power/tick",
+  "message.space-trek.solar_night": "Solar Panel: no sunlight",
+  "message.space-trek.solar_blocked": "Solar Panel: sky is blocked",
+  "message.space-trek.solar_angle": "Solar Panel: not facing the sun",
+  "message.space-trek.solar_rotated": "Solar Panel rotated"
 }

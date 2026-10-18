@@ -48,6 +48,9 @@ public class CoolerHud {
         if (!cooler.isFormed()) {
             status = "Needs a 3x2x2 casing frame with 2 ports";
             color = 0xFFFF5555;
+        } else if (cooler.getCooldown() > 0) {
+            status = "Overheated - cooling down " + (cooler.getCooldown() + 19) / 20 + "s";
+            color = 0xFFFFAA00;
         } else if (cooler.getProgress() > 0) {
             status = "Cooling... " + cooler.getProgress() * 100 / CoolerControllerBlockEntity.PROCESS_TICKS + "%";
             color = 0xFF55FF55;

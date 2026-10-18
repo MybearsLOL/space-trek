@@ -99,6 +99,14 @@ public class ModBlocks {
                     .lightLevel(state -> state.getValue(BlockStateProperties.LIT) ? 10 : 0))
     );
 
+    public static final SolarPanelBlock SOLAR_PANEL_BLOCK = Registry.register(
+            BuiltInRegistries.BLOCK,
+            ResourceLocation.fromNamespaceAndPath("space-trek", "solar_panel"),
+            new SolarPanelBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
+                    .strength(2.0f)
+                    .noOcclusion())
+    );
+
     public static final PowerCableBlock POWER_CABLE_BLOCK = Registry.register(
             BuiltInRegistries.BLOCK,
             ResourceLocation.fromNamespaceAndPath("space-trek", "power_cable"),

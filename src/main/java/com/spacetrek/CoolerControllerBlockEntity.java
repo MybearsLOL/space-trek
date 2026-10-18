@@ -33,11 +33,15 @@ public class CoolerControllerBlockEntity extends BlockEntity implements PowerAcc
     public static final int BUCKET_AMOUNT = 1000;
     public static final int PROCESS_TICKS = 200;
     public static final int POWER_PER_TICK = 25;
+    public static final int BUCKETS_BEFORE_COOLDOWN = 3;
+    public static final int COOLDOWN_TICKS = 700;
 
     private int hot = 0;
     private int cooled = 0;
     private int energy = 0;
     private int progress = 0;
+    private int batchCount = 0;
+    private int cooldown = 0;
     private boolean formed = false;
     private final List<BlockPos> ports = new ArrayList<>();
 
@@ -50,6 +54,7 @@ public class CoolerControllerBlockEntity extends BlockEntity implements PowerAcc
     public int getCooled() { return cooled; }
     public int getEnergy() { return energy; }
     public int getProgress() { return progress; }
+    public int getCooldown() { return cooldown; }
 
     public float getProgressFraction(float partialTick) {
         if (progress <= 0) return 0f;
@@ -163,6 +168,11 @@ public class CoolerControllerBlockEntity extends BlockEntity implements PowerAcc
         boolean working = false;
         boolean needsSync = false;
 
+        if (cooldown > 0) {
+            cooldown--;
+            if (cooldown == 0 || cooldown % 20 == 0) needsSync = true;
+        }
+
         if (formed) {
             if (progress > 0) {
                 if (energy >= POWER_PER_TICK) {
@@ -172,12 +182,17 @@ public class CoolerControllerBlockEntity extends BlockEntity implements PowerAcc
                     if (progress >= PROCESS_TICKS) {
                         progress = 0;
                         cooled = Math.min(MAX_FLUID, cooled + BUCKET_AMOUNT);
+                        batchCount++;
+                        if (batchCount >= BUCKETS_BEFORE_COOLDOWN) {
+                            batchCount = 0;
+                            cooldown = COOLDOWN_TICKS;
+                        }
                         needsSync = true;
                     } else if (progress % 20 == 0) {
                         needsSync = true;
                     }
                 }
-            } else if (hot >= BUCKET_AMOUNT && cooled + BUCKET_AMOUNT <= MAX_FLUID && energy >= POWER_PER_TICK) {
+            } else if (cooldown <= 0 && hot >= BUCKET_AMOUNT && cooled + BUCKET_AMOUNT <= MAX_FLUID && energy >= POWER_PER_TICK) {
                 hot -= BUCKET_AMOUNT;
                 energy -= POWER_PER_TICK;
                 progress = 1;
@@ -212,6 +227,7 @@ public class CoolerControllerBlockEntity extends BlockEntity implements PowerAcc
     }
 
     public void clientTick(Level level, BlockPos pos, BlockState state) {
+        if (cooldown > 0) cooldown--;
         if (!formed || !state.getValue(CoolerControllerBlock.LIT)) return;
 
         if (progress > 0 && progress < PROCESS_TICKS) progress++;
@@ -254,6 +270,8 @@ public class CoolerControllerBlockEntity extends BlockEntity implements PowerAcc
         tag.putInt("Cooled", cooled);
         tag.putInt("Energy", energy);
         tag.putInt("Progress", progress);
+        tag.putInt("Batch", batchCount);
+        tag.putInt("Cooldown", cooldown);
         tag.putBoolean("Formed", formed);
     }
 
@@ -264,6 +282,8 @@ public class CoolerControllerBlockEntity extends BlockEntity implements PowerAcc
         cooled = tag.getInt("Cooled");
         energy = tag.getInt("Energy");
         progress = tag.getInt("Progress");
+        batchCount = tag.getInt("Batch");
+        cooldown = tag.getInt("Cooldown");
         formed = tag.getBoolean("Formed");
     }
 

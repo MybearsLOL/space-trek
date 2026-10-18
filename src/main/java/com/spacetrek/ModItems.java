@@ -67,6 +67,11 @@ public class ModItems {
             new BlockItem(ModBlocks.COAL_GENERATOR_BLOCK, new Item.Properties())
     );
 
+    public static final BlockItem SOLAR_PANEL = register(
+            "solar_panel",
+            new BlockItem(ModBlocks.SOLAR_PANEL_BLOCK, new Item.Properties())
+    );
+
     public static final BlockItem POWER_CABLE = register(
             "power_cable",
             new BlockItem(ModBlocks.POWER_CABLE_BLOCK, new Item.Properties())
@@ -129,6 +134,7 @@ public class ModItems {
                     entries.accept(FUEL_TANK);
                     entries.accept(INTAKE);
                     entries.accept(COAL_GENERATOR);
+                    entries.accept(SOLAR_PANEL);
                     entries.accept(POWER_CABLE);
                     entries.accept(FLUID_PIPE);
                     entries.accept(FLUID_PUMP);
