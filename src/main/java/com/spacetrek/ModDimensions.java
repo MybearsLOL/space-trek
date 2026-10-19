@@ -27,6 +27,7 @@ import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The space dimension: keys, the /space command, free flight, zero gravity and no void death.
@@ -195,14 +196,16 @@ public class ModDimensions {
                 boolean hasFlightTag = player.getTags().contains(FLIGHT_TAG);
 
                 // Climbed out of a planet's atmosphere: continue in space, lined up with the planet
-                if (!inSpace && player.getY() >= SPACE_TRANSITION_END_Y) {
+                boolean onRocket = player.getVehicle() instanceof RocketEntity;
+
+                if (!inSpace && !onRocket && player.getY() >= SPACE_TRANSITION_END_Y) {
                     if (leavePlanet(player)) {
                         continue;
                     }
                 }
 
                 // Flew down into a planet that can be entered (its "dimension" is set in the editor)
-                if (inSpace && tryEnterPlanet(player)) {
+                if (inSpace && !onRocket && tryEnterPlanet(player)) {
                     continue;
                 }
 
@@ -297,6 +300,56 @@ public class ModDimensions {
             return true;
         }
         return false;
+    }
+
+    @Nullable
+    public static ServerLevel spaceLevel(MinecraftServer server) {
+        return server.getLevel(SPACE_LEVEL);
+    }
+
+    @Nullable
+    public static Vec3 spaceArrival(ServerLevel from, Vec3 pos) {
+        PlanetGates.Gate gate = PlanetGates.forDimension(from.dimension());
+        if (gate != null) {
+            double altitude = Math.max(0.0, pos.y - HOME_SURFACE_Y);
+            Vec3 offset = PlanetGates.capOffset(pos.x, pos.z, gate.radius() + altitude);
+            Vec3 center = gate.center(from.getGameTime());
+            return new Vec3(center.x + offset.x, center.y + offset.y, center.z + offset.z);
+        }
+        if (from.dimension() != Level.OVERWORLD) {
+            return null;
+        }
+        return pos;
+    }
+
+    public record PlanetEntry(ServerLevel level, Vec3 pos) {
+    }
+
+    @Nullable
+    public static PlanetEntry planetEntry(ServerLevel space, Vec3 pos) {
+        double arrivalY = SPACE_TRANSITION_END_Y - ARRIVAL_MARGIN;
+
+        for (PlanetGates.Gate gate : PlanetGates.gates()) {
+            Vec3 center = gate.center(space.getGameTime());
+            double ox = pos.x - center.x;
+            double oy = pos.y - center.y;
+            double oz = pos.z - center.z;
+            double entryDistance = gate.radius() + (arrivalY - HOME_SURFACE_Y);
+
+            if (oy <= 0.0 || Math.sqrt(ox * ox + oy * oy + oz * oz) > entryDistance) {
+                continue;
+            }
+            if (Math.hypot(ox, oz) > entryDistance * 0.999) {
+                continue;
+            }
+
+            ServerLevel destination = space.getServer().getLevel(gate.dimension());
+            if (destination == null) {
+                continue;
+            }
+            return new PlanetEntry(destination, new Vec3(ox, arrivalY, oz));
+        }
+        return null;
     }
 
     /** After arriving from space: slow falling until the player lands, so they never take fall damage. */

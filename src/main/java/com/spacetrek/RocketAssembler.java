@@ -16,16 +16,17 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
 public final class RocketAssembler {
 
-    public enum Result { OK, NO_ENGINE, TOO_LARGE }
+    public enum Result { OK, TOO_LARGE }
 
     public static final int MAX_BLOCKS = 512;
-    public static final TagKey<Block> ROCKET_BLOCKS =
-            TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("space-trek", "rocket_blocks"));
+    public static final TagKey<Block> EXCLUDED_BLOCKS =
+            TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("space-trek", "rocket_excluded"));
 
     private RocketAssembler() {
     }
@@ -33,7 +34,8 @@ public final class RocketAssembler {
     private static boolean isPart(ServerLevel level, BlockPos pos, BlockState state) {
         if (state.isAir()) return false;
         if (state.getDestroySpeed(level, pos) < 0) return false;
-        return state.is(ModBlocks.ROCKET_CONTROLLER_BLOCK) || state.is(ROCKET_BLOCKS);
+        if (state.getBlock() instanceof LiquidBlock) return false;
+        return state.is(ModBlocks.ROCKET_CONTROLLER_BLOCK) || !state.is(EXCLUDED_BLOCKS);
     }
 
     public static Result assemble(ServerLevel level, BlockPos controller) {
@@ -56,12 +58,6 @@ public final class RocketAssembler {
                 if (seen.add(next)) queue.add(next);
             }
         }
-
-        int engines = 0;
-        for (BlockPos pos : found) {
-            if (level.getBlockState(pos).is(ModBlocks.ROCKET_ENGINE_BLOCK)) engines++;
-        }
-        if (engines == 0) return Result.NO_ENGINE;
 
         List<FuelTankBlockEntity> tanks = new ArrayList<>();
         for (BlockPos pos : found) {

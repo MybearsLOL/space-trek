@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "space-trek:block/rocket_seat"
+    },
+    "facing=east": {
+      "model": "space-trek:block/rocket_seat",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "space-trek:block/rocket_seat",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "space-trek:block/rocket_seat",
+      "y": 270
+    }
+  }
+}

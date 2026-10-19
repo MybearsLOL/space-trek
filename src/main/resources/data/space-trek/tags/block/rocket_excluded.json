@@ -1,0 +1,30 @@
+{
+  "values": [
+    "#minecraft:base_stone_overworld",
+    "#minecraft:base_stone_nether",
+    "#minecraft:dirt",
+    "#minecraft:sand",
+    "#minecraft:leaves",
+    "#minecraft:snow",
+    "#minecraft:replaceable",
+    "#minecraft:coal_ores",
+    "#minecraft:iron_ores",
+    "#minecraft:gold_ores",
+    "#minecraft:copper_ores",
+    "#minecraft:diamond_ores",
+    "#minecraft:redstone_ores",
+    "#minecraft:lapis_ores",
+    "#minecraft:emerald_ores",
+    "minecraft:gravel",
+    "minecraft:clay",
+    "minecraft:netherrack",
+    "minecraft:end_stone",
+    "minecraft:snow_block",
+    "minecraft:ice",
+    "minecraft:packed_ice",
+    "minecraft:blue_ice",
+    "minecraft:bedrock",
+    "minecraft:water",
+    "minecraft:lava"
+  ]
+}

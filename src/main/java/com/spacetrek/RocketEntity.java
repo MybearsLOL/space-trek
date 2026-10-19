@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -31,6 +33,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.portal.DimensionTransition;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -44,23 +47,26 @@ public class RocketEntity extends Entity {
 
     public static final double GRAVITY = 0.05;
     public static final double DRAG = 0.95;
-    public static final double MAX_THRUST = 0.12;
+    public static final double SPACE_DRAG = 0.999;
+    public static final double MAX_ACCEL = 0.15;
     public static final double THRUST_PER_WEIGHT = 20.0;
     public static final double FUEL_PER_ENGINE_TICK = 1.5;
-    private static final int LAND_DELAY = 25;
+    private static final float MAX_TURN = 3.0f;
+    private static final int MAX_EXHAUST_ENGINES = 8;
 
     private List<Part> parts = new ArrayList<>();
+    private final List<Part> seats = new ArrayList<>();
+    private final List<Part> engineParts = new ArrayList<>();
     private int minX;
     private int minY;
     private int minZ;
     private int maxX;
     private int maxY;
     private int maxZ;
-    private int engines;
+    private Vec3 thrustLocal = Vec3.ZERO;
     private float boxWidth = 1.0f;
     private float boxHeight = 1.0f;
     private double fuelMb = 0.0;
-    private int landedTicks = 0;
 
     public RocketEntity(EntityType<? extends RocketEntity> type, Level level) {
         super(type, level);
@@ -82,10 +88,6 @@ public class RocketEntity extends Entity {
         return (minZ + maxZ + 1) / 2.0;
     }
 
-    public double getFuelMb() {
-        return fuelMb;
-    }
-
     public void setParts(List<Part> list, double fuel) {
         parts = new ArrayList<>(list);
         fuelMb = fuel;
@@ -95,10 +97,16 @@ public class RocketEntity extends Entity {
     }
 
     private void recompute() {
+        seats.clear();
+        engineParts.clear();
+        thrustLocal = Vec3.ZERO;
         if (parts.isEmpty()) {
-            minX = minY = minZ = 0;
-            maxX = maxY = maxZ = 0;
-            engines = 0;
+            minX = 0;
+            minY = 0;
+            minZ = 0;
+            maxX = 0;
+            maxY = 0;
+            maxZ = 0;
             boxWidth = 1.0f;
             boxHeight = 1.0f;
             return;
@@ -109,7 +117,7 @@ public class RocketEntity extends Entity {
         maxX = Integer.MIN_VALUE;
         maxY = Integer.MIN_VALUE;
         maxZ = Integer.MIN_VALUE;
-        engines = 0;
+        Vec3 thrust = Vec3.ZERO;
         for (Part part : parts) {
             minX = Math.min(minX, part.x());
             minY = Math.min(minY, part.y());
@@ -117,8 +125,16 @@ public class RocketEntity extends Entity {
             maxX = Math.max(maxX, part.x());
             maxY = Math.max(maxY, part.y());
             maxZ = Math.max(maxZ, part.z());
-            if (part.state().is(ModBlocks.ROCKET_ENGINE_BLOCK)) engines++;
+            if (part.state().is(ModBlocks.ROCKET_SEAT_BLOCK)) {
+                seats.add(part);
+            }
+            if (part.state().is(ModBlocks.ROCKET_ENGINE_BLOCK)) {
+                engineParts.add(part);
+                Direction facing = part.state().getValue(RocketEngineBlock.FACING);
+                thrust = thrust.add(-facing.getStepX(), -facing.getStepY(), -facing.getStepZ());
+            }
         }
+        thrustLocal = thrust;
         boxWidth = Math.max(maxX - minX + 1, maxZ - minZ + 1);
         boxHeight = maxY - minY + 1;
     }
@@ -210,30 +226,44 @@ public class RocketEntity extends Entity {
 
     @Override
     protected boolean canAddPassenger(Entity passenger) {
-        return getPassengers().isEmpty();
+        return getPassengers().size() < seats.size();
     }
 
     @Override
     public InteractionResult interact(Player player, InteractionHand hand) {
-        if (player.isSecondaryUseActive()) return InteractionResult.PASS;
-        if (!level().isClientSide) {
-            player.startRiding(this);
+        if (level().isClientSide) return InteractionResult.SUCCESS;
+
+        if (player.isSecondaryUseActive()) {
+            boolean slow = getDeltaMovement().lengthSqr() < 0.02;
+            if (!(slow || onGround()) || !disassemble()) {
+                player.displayClientMessage(Component.translatable("message.space-trek.rocket_cannot_land"), true);
+            }
+            return InteractionResult.CONSUME;
         }
-        return InteractionResult.sidedSuccess(level().isClientSide);
+
+        if (seats.isEmpty()) {
+            player.displayClientMessage(Component.translatable("message.space-trek.rocket_no_seat"), true);
+            return InteractionResult.CONSUME;
+        }
+        player.startRiding(this);
+        return InteractionResult.CONSUME;
+    }
+
+    private Vec3 toWorld(Vec3 local) {
+        double angle = Math.toRadians(-getYRot());
+        double sin = Math.sin(angle);
+        double cos = Math.cos(angle);
+        return new Vec3(local.x * cos + local.z * sin, local.y, -local.x * sin + local.z * cos);
     }
 
     @Override
     protected void positionRider(Entity passenger, Entity.MoveFunction callback) {
-        if (!hasPassenger(passenger)) return;
-        double localX = 0.5 - getOriginX();
-        double localZ = 0.5 - getOriginZ();
-        double localY = -getOriginY();
-        double angle = Math.toRadians(-getYRot());
-        double sin = Math.sin(angle);
-        double cos = Math.cos(angle);
-        double rx = localX * cos + localZ * sin;
-        double rz = -localX * sin + localZ * cos;
-        callback.accept(passenger, getX() + rx, getY() + localY, getZ() + rz);
+        int index = getPassengers().indexOf(passenger);
+        if (index < 0 || seats.isEmpty()) return;
+        Part seat = seats.get(Math.min(index, seats.size() - 1));
+        Vec3 local = new Vec3(seat.x() + 0.5 - getOriginX(), seat.y() - getOriginY() + 0.1, seat.z() + 0.5 - getOriginZ());
+        Vec3 world = toWorld(local);
+        callback.accept(passenger, getX() + world.x, getY() + world.y, getZ() + world.z);
     }
 
     @Override
@@ -242,7 +272,7 @@ public class RocketEntity extends Entity {
     }
 
     @Nullable
-    private Player rider() {
+    private Player pilot() {
         return getFirstPassenger() instanceof Player player ? player : null;
     }
 
@@ -255,71 +285,95 @@ public class RocketEntity extends Entity {
             return;
         }
 
-        Player rider = rider();
+        boolean inSpace = level().dimension() == ModDimensions.SPACE_LEVEL;
+        Player pilot = pilot();
         Vec3 velocity = getDeltaMovement();
         boolean thrusting = false;
 
-        if (rider != null) {
-            setYRot(Mth.rotLerp(0.12f, getYRot(), rider.getYRot()));
-            setXRot(Mth.lerp(0.12f, getXRot(), Mth.clamp(rider.getXRot(), -90.0f, 90.0f)));
+        if (pilot != null) {
+            float turn = MAX_TURN / (1.0f + parts.size() / 60.0f);
+            if (pilot.xxa != 0.0f) {
+                setYRot(getYRot() - Math.signum(pilot.xxa) * turn);
+            }
 
-            if (rider.zza > 0.0f && fuelMb > 0.0 && engines > 0) {
+            if (pilot.zza > 0.0f && fuelMb > 0.0 && !engineParts.isEmpty() && thrustLocal.lengthSqr() > 1.0E-6) {
                 double weight = Math.max(1, parts.size());
-                double accel = Math.min(MAX_THRUST, GRAVITY * engines * THRUST_PER_WEIGHT / weight);
-                float pitch = getXRot() * Mth.DEG_TO_RAD;
-                float yaw = getYRot() * Mth.DEG_TO_RAD;
-                Vec3 direction = new Vec3(-Mth.cos(pitch) * Mth.sin(yaw), -Mth.sin(pitch), Mth.cos(pitch) * Mth.cos(yaw));
-                velocity = velocity.add(direction.scale(accel));
-                fuelMb = Math.max(0.0, fuelMb - FUEL_PER_ENGINE_TICK * engines);
+                double perEngine = GRAVITY * THRUST_PER_WEIGHT / weight;
+                Vec3 accel = toWorld(thrustLocal).scale(perEngine);
+                if (accel.length() > MAX_ACCEL) {
+                    accel = accel.normalize().scale(MAX_ACCEL);
+                }
+                velocity = velocity.add(accel);
+                fuelMb = Math.max(0.0, fuelMb - FUEL_PER_ENGINE_TICK * engineParts.size());
                 thrusting = true;
-            } else if (rider.zza < 0.0f) {
+            } else if (pilot.zza < 0.0f) {
                 velocity = velocity.scale(0.9);
             }
         }
 
-        velocity = velocity.add(0.0, -GRAVITY, 0.0);
+        if (!inSpace) {
+            velocity = velocity.add(0.0, -GRAVITY, 0.0);
+        }
         setDeltaMovement(velocity);
         move(MoverType.SELF, velocity);
 
-        Vec3 after = getDeltaMovement().scale(DRAG);
+        Vec3 after = getDeltaMovement().scale(inSpace ? SPACE_DRAG : DRAG);
         if (onGround()) {
             after = new Vec3(after.x * 0.7, after.y, after.z * 0.7);
         }
         setDeltaMovement(after);
 
-        if (getY() < level().getMinBuildHeight() + 1) {
+        if (!inSpace && getY() < level().getMinBuildHeight() + 1) {
             setPos(getX(), level().getMinBuildHeight() + 1, getZ());
             setDeltaMovement(after.x, 0.0, after.z);
         }
 
-        if (rider instanceof ServerPlayer player && tickCount % 5 == 0) {
+        if (pilot instanceof ServerPlayer player && tickCount % 5 == 0) {
             Component status = Component.translatable("message.space-trek.rocket_status",
                     String.format(Locale.ROOT, "%.1f", fuelMb / 1000.0),
-                    engines,
+                    engineParts.size(),
                     String.format(Locale.ROOT, "%.1f", after.length() * 20.0));
             player.displayClientMessage(status, true);
         }
 
-        if (thrusting && tickCount % 3 == 0 && level() instanceof ServerLevel serverLevel) {
-            float pitch = getXRot() * Mth.DEG_TO_RAD;
-            float yaw = getYRot() * Mth.DEG_TO_RAD;
-            double dx = Mth.cos(pitch) * Mth.sin(yaw);
-            double dy = Mth.sin(pitch);
-            double dz = -Mth.cos(pitch) * Mth.cos(yaw);
-            double reach = boxHeight / 2.0 + 0.5;
-            serverLevel.sendParticles(net.minecraft.core.particles.ParticleTypes.FLAME,
-                    getX() + dx * reach, getY() + boxHeight / 2.0 + dy * reach, getZ() + dz * reach,
-                    4, 0.2, 0.2, 0.2, 0.02);
+        if (thrusting && tickCount % 2 == 0 && level() instanceof ServerLevel serverLevel) {
+            int shown = Math.min(engineParts.size(), MAX_EXHAUST_ENGINES);
+            for (int i = 0; i < shown; i++) {
+                Part engine = engineParts.get(i);
+                Direction facing = engine.state().getValue(RocketEngineBlock.FACING);
+                Vec3 nozzle = new Vec3(facing.getStepX(), facing.getStepY(), facing.getStepZ());
+                Vec3 local = new Vec3(engine.x() + 0.5 - getOriginX(), engine.y() - getOriginY() + 0.5, engine.z() + 0.5 - getOriginZ())
+                        .add(nozzle.scale(0.8));
+                Vec3 world = toWorld(local);
+                Vec3 push = toWorld(nozzle);
+                serverLevel.sendParticles(ParticleTypes.FLAME, getX() + world.x, getY() + world.y, getZ() + world.z,
+                        0, push.x, push.y, push.z, 0.35);
+            }
         }
 
-        if (rider == null && onGround()) {
-            landedTicks++;
-            if (landedTicks >= LAND_DELAY) {
-                if (!disassemble()) landedTicks = 0;
-            }
-        } else {
-            landedTicks = 0;
+        if (level() instanceof ServerLevel here) {
+            tryChangeDimension(here);
         }
+    }
+
+    private boolean tryChangeDimension(ServerLevel here) {
+        if (here.dimension() == ModDimensions.SPACE_LEVEL) {
+            ModDimensions.PlanetEntry entry = ModDimensions.planetEntry(here, position());
+            if (entry == null) return false;
+            return transfer(entry.level(), entry.pos());
+        }
+        if (getY() < ModDimensions.SPACE_TRANSITION_END_Y) return false;
+        ServerLevel space = ModDimensions.spaceLevel(here.getServer());
+        if (space == null) return false;
+        Vec3 target = ModDimensions.spaceArrival(here, position());
+        if (target == null) return false;
+        return transfer(space, target);
+    }
+
+    private boolean transfer(ServerLevel destination, Vec3 target) {
+        DimensionTransition transition = new DimensionTransition(destination, target, getDeltaMovement(),
+                getYRot(), getXRot(), DimensionTransition.DO_NOTHING);
+        return changeDimension(transition) != null;
     }
 
     private boolean disassemble() {
@@ -349,6 +403,8 @@ public class RocketEntity extends Entity {
             if (fits(level, candidate, quarter)) base = candidate;
         }
         if (base == null) return false;
+
+        ejectPassengers();
 
         List<BlockPos> placed = new ArrayList<>();
         List<FuelTankBlockEntity> tanks = new ArrayList<>();

@@ -113,6 +113,13 @@ public class ModBlocks {
             new RocketControllerBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK))
     );
 
+    public static final RocketSeatBlock ROCKET_SEAT_BLOCK = Registry.register(
+            BuiltInRegistries.BLOCK,
+            ResourceLocation.fromNamespaceAndPath("space-trek", "rocket_seat"),
+            new RocketSeatBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
+                    .noOcclusion())
+    );
+
     public static final RocketEngineBlock ROCKET_ENGINE_BLOCK = Registry.register(
             BuiltInRegistries.BLOCK,
             ResourceLocation.fromNamespaceAndPath("space-trek", "rocket_engine"),

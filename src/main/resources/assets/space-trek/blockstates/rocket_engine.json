@@ -1,7 +1,22 @@
 {
   "variants": {
-    "": {
-      "model": "space-trek:block/rocket_engine"
+    "facing=down": {
+      "model": "space-trek:block/rocket_engine_down"
+    },
+    "facing=up": {
+      "model": "space-trek:block/rocket_engine_up"
+    },
+    "facing=north": {
+      "model": "space-trek:block/rocket_engine_north"
+    },
+    "facing=south": {
+      "model": "space-trek:block/rocket_engine_south"
+    },
+    "facing=east": {
+      "model": "space-trek:block/rocket_engine_east"
+    },
+    "facing=west": {
+      "model": "space-trek:block/rocket_engine_west"
     }
   }
 }

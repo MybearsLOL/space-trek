@@ -33,13 +33,11 @@ public class RocketRenderer extends EntityRenderer<RocketEntity> {
     public void render(RocketEntity entity, float entityYaw, float partialTick, PoseStack poseStack,
                        MultiBufferSource bufferSource, int packedLight) {
         float yaw = Mth.rotLerp(partialTick, entity.yRotO, entity.getYRot());
-        float pitch = Mth.lerp(partialTick, entity.xRotO, entity.getXRot());
         float half = entity.getBbHeight() / 2.0f;
 
         poseStack.pushPose();
         poseStack.translate(0.0, half, 0.0);
         poseStack.mulPose(Axis.YP.rotationDegrees(-yaw));
-        poseStack.mulPose(Axis.XP.rotationDegrees(pitch + 90.0f));
         poseStack.translate(0.0, -half, 0.0);
 
         double ox = entity.getOriginX();

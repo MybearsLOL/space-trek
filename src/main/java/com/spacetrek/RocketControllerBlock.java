@@ -25,7 +25,6 @@ public class RocketControllerBlock extends Block {
         RocketAssembler.Result result = RocketAssembler.assemble((ServerLevel) level, pos);
         Component message = switch (result) {
             case OK -> Component.translatable("message.space-trek.rocket_assembled");
-            case NO_ENGINE -> Component.translatable("message.space-trek.rocket_no_engine");
             case TOO_LARGE -> Component.translatable("message.space-trek.rocket_too_big");
         };
         player.displayClientMessage(message, true);
