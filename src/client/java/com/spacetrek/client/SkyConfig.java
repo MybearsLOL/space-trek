@@ -177,6 +177,7 @@ public class SkyConfig {
             o.addProperty("dimension", sky.dimension);
             o.addProperty("enabled", sky.enabled);
             o.addProperty("homePlanet", sky.homePlanet);
+            o.addProperty("sun", sky.sun);
             JsonArray planets = new JsonArray();
             for (DimensionSky.SkyBody body : sky.planets) {
                 JsonObject b = new JsonObject();
@@ -187,6 +188,10 @@ public class SkyConfig {
             }
             o.add("planets", planets);
             o.addProperty("poleTilt", sky.poleTilt);
+            o.addProperty("poleTurn", sky.poleTurn);
+            o.addProperty("controlTime", sky.controlTime);
+            o.addProperty("dayLengthTicks", sky.dayLengthTicks);
+            o.addProperty("freezeTime", sky.freezeTime);
             o.addProperty("atmosphereColor", hex(sky.atmosphereColor));
             o.addProperty("horizonColor", hex(sky.horizonColor));
             o.addProperty("twilightColor", hex(sky.twilightColor));
@@ -219,6 +224,7 @@ public class SkyConfig {
         sky.dimension = getString(o, "dimension", sky.dimension).trim();
         sky.enabled = o.has("enabled") ? o.get("enabled").getAsBoolean() : sky.enabled;
         sky.homePlanet = getString(o, "homePlanet", "").trim();
+        sky.sun = getString(o, "sun", "").trim();
         if (o.has("planets")) {
             for (JsonElement element : o.getAsJsonArray("planets")) {
                 DimensionSky.SkyBody body = new DimensionSky.SkyBody();
@@ -236,6 +242,10 @@ public class SkyConfig {
             }
         }
         sky.poleTilt = getFloat(o, "poleTilt", sky.poleTilt);
+        sky.poleTurn = getFloat(o, "poleTurn", sky.poleTurn);
+        sky.controlTime = o.has("controlTime") ? o.get("controlTime").getAsBoolean() : sky.controlTime;
+        sky.dayLengthTicks = getFloat(o, "dayLengthTicks", sky.dayLengthTicks);
+        sky.freezeTime = o.has("freezeTime") ? o.get("freezeTime").getAsBoolean() : sky.freezeTime;
         sky.atmosphereColor = getColor(o, "atmosphereColor", sky.atmosphereColor);
         sky.horizonColor = getColor(o, "horizonColor", sky.horizonColor);
         sky.twilightColor = getColor(o, "twilightColor", sky.twilightColor);

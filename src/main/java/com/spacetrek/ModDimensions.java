@@ -107,6 +107,8 @@ public class ModDimensions {
     private static final boolean DEBUG_ITEM_REMOVAL = true;
 
     public static void register() {
+        ModGameRules.register();
+
         // /space  -> teleports you to the space dimension, and back again
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
                 dispatcher.register(Commands.literal("space")
@@ -186,6 +188,7 @@ public class ModDimensions {
         // Flight and zero gravity while in space, back to normal when leaving
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             PlanetGates.tick();
+            SkyClock.tick(server);
 
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 boolean inSpace = player.level().dimension() == SPACE_LEVEL;

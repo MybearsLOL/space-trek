@@ -180,6 +180,20 @@ public class SkyInspector extends SingleWindowInspector {
                     ImGui.text("(no other planets exist - add them in the Planet Editor)");
                 }
                 skiesChanged |= ImGui.sliderFloat("Sky turn axis tilt", e.poleTilt, -90.0f, 90.0f);
+                skiesChanged |= ImGui.sliderFloat("Sky turn axis direction", e.poleTurn, -180.0f, 180.0f);
+
+                ImGui.separator();
+                ImGui.text("Day and night cycle");
+                skiesChanged |= ImGui.checkbox("Take over the day/night cycle", e.controlTime);
+                if (e.controlTime.get()) {
+                    skiesChanged |= ImGui.dragFloat("Day length (ticks, 24000 = vanilla)", e.dayLength, 100.0f, 200.0f, 10000000.0f);
+                    float minutes = e.dayLength[0] / 20.0f / 60.0f;
+                    ImGui.text(String.format("One day = %.1f minutes. Use /time set to pick the time of day.", minutes));
+                    ImGui.text("A world gamerule 'Day length (minutes)' other than 20 overrides this.");
+                    skiesChanged |= ImGui.checkbox("Freeze time", e.freeze);
+                } else {
+                    ImGui.text("Off: Minecraft's normal 20-minute day runs the sky.");
+                }
 
                 ImGui.separator();
                 ImGui.text("Atmosphere glow");
@@ -300,6 +314,10 @@ public class SkyInspector extends SingleWindowInspector {
                 }
             }
             sky.poleTilt = e.poleTilt[0];
+            sky.poleTurn = e.poleTurn[0];
+            sky.controlTime = e.controlTime.get();
+            sky.dayLengthTicks = e.dayLength[0];
+            sky.freezeTime = e.freeze.get();
             sky.atmosphereColor = toColor(e.atmosphereColor);
             sky.horizonColor = toColor(e.horizonColor);
             sky.twilightColor = toColor(e.twilightColor);
@@ -343,6 +361,10 @@ public class SkyInspector extends SingleWindowInspector {
         String sun = "";
         final Map<String, EditableBody> visible = new LinkedHashMap<>();
         final float[] poleTilt = new float[1];
+        final float[] poleTurn = new float[1];
+        final ImBoolean controlTime = new ImBoolean(false);
+        final float[] dayLength = new float[]{24000.0f};
+        final ImBoolean freeze = new ImBoolean(false);
         final float[] atmosphereColor = new float[3];
         final float[] horizonColor = new float[3];
         final float[] twilightColor = new float[3];
@@ -368,6 +390,10 @@ public class SkyInspector extends SingleWindowInspector {
                 e.visible.put(body.key, editable);
             }
             e.poleTilt[0] = sky.poleTilt;
+            e.poleTurn[0] = sky.poleTurn;
+            e.controlTime.set(sky.controlTime);
+            e.dayLength[0] = sky.dayLengthTicks;
+            e.freeze.set(sky.freezeTime);
             fromColor(sky.atmosphereColor, e.atmosphereColor);
             fromColor(sky.horizonColor, e.horizonColor);
             fromColor(sky.twilightColor, e.twilightColor);

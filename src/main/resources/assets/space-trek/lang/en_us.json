@@ -32,5 +32,7 @@
   "message.space-trek.solar_night": "Solar Panel: no sunlight",
   "message.space-trek.solar_blocked": "Solar Panel: sky is blocked",
   "message.space-trek.solar_angle": "Solar Panel: not facing the sun",
-  "message.space-trek.solar_rotated": "Solar Panel rotated"
+  "message.space-trek.solar_rotated": "Solar Panel rotated",
+  "gamerule.spacetrekDayLengthMinutes": "Day length (minutes)",
+  "gamerule.spacetrekDayLengthMinutes.description": "How many real minutes one Minecraft day lasts. 20 is the normal Minecraft day. Changes how fast the sun, sky and lighting move."
 }

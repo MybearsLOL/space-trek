@@ -144,7 +144,8 @@ public class SpaceSkyRenderer implements DimensionRenderingRegistry.SkyRenderer 
         // The sky turns like the vanilla sun does: one full turn per day
         float angle = level.getTimeOfDay(partialTick) * ((float) Math.PI * 2.0f);
         double tilt = Math.toRadians(sky.poleTilt);
-        Vector3f axis = new Vector3f(0.0f, (float) Math.sin(tilt), (float) -Math.cos(tilt));
+        Vector3f axis = new Vector3f(0.0f, (float) Math.sin(tilt), (float) -Math.cos(tilt))
+                .rotateY((float) Math.toRadians(sky.poleTurn));
         Quaternionf celestialToWorld = new Quaternionf().rotationAxis(-angle, axis.x, axis.y, axis.z);
         Vector3f sunWorld = celestialToWorld.transform(sunCelestial.x, sunCelestial.y, sunCelestial.z, new Vector3f());
 

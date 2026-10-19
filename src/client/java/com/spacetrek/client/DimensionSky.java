@@ -53,6 +53,17 @@ public final class DimensionSky {
     /** Tilt of the sky's turning axis in degrees. 0 = the vanilla east-west sun path. */
     public float poleTilt = 0.0f;
 
+    /** Turns the tilted axis around the vertical, in degrees. Changes the direction the sun path leans. */
+    public float poleTurn = 0.0f;
+
+    // ---- Day / night cycle ----
+    /** true = this sky takes over Minecraft's day/night cycle (the world time then follows the settings below). */
+    public boolean controlTime = false;
+    /** How long one full day lasts, in ticks. 24000 = vanilla (20 minutes); 12000 = 10 minutes. */
+    public float dayLengthTicks = 24000.0f;
+    /** true = time stands still (use /time set to pick the moment). */
+    public boolean freezeTime = false;
+
     // ---- Atmosphere glow (covers the stars in the day, gone at night) ----
     public int atmosphereColor = 0x4DA8FF;
     public int horizonColor = 0xBFE3FF;
@@ -81,6 +92,10 @@ public final class DimensionSky {
             c.planets.add(body.copy());
         }
         c.poleTilt = poleTilt;
+        c.poleTurn = poleTurn;
+        c.controlTime = controlTime;
+        c.dayLengthTicks = dayLengthTicks;
+        c.freezeTime = freezeTime;
         c.atmosphereColor = atmosphereColor;
         c.horizonColor = horizonColor;
         c.twilightColor = twilightColor;
