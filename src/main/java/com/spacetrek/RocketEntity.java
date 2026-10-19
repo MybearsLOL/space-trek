@@ -34,6 +34,7 @@ import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.portal.DimensionTransition;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -42,8 +43,14 @@ public class RocketEntity extends Entity {
     public record Part(int x, int y, int z, BlockState state, @Nullable CompoundTag nbt) {
     }
 
+    public record PartHit(Part part, double distance) {
+    }
+
     private static final EntityDataAccessor<CompoundTag> DATA_PARTS =
             SynchedEntityData.defineId(RocketEntity.class, EntityDataSerializers.COMPOUND_TAG);
+
+    private static final EntityDataAccessor<Float> DATA_YAW =
+            SynchedEntityData.defineId(RocketEntity.class, EntityDataSerializers.FLOAT);
 
     public static final double GRAVITY = 0.05;
     public static final double DRAG = 0.95;
@@ -67,9 +74,19 @@ public class RocketEntity extends Entity {
     private float boxWidth = 1.0f;
     private float boxHeight = 1.0f;
     private double fuelMb = 0.0;
+    private float yawVelocity = 0.0f;
+    private float throttle = 0.0f;
+    private int lerpSteps;
+    private double lerpX;
+    private double lerpY;
+    private double lerpZ;
 
     public RocketEntity(EntityType<? extends RocketEntity> type, Level level) {
         super(type, level);
+    }
+
+    public float getThrottle() {
+        return throttle;
     }
 
     public List<Part> getParts() {
@@ -179,6 +196,7 @@ public class RocketEntity extends Entity {
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         builder.define(DATA_PARTS, new CompoundTag());
+        builder.define(DATA_YAW, 0.0f);
     }
 
     @Override
@@ -188,6 +206,59 @@ public class RocketEntity extends Entity {
             readParts(entityData.get(DATA_PARTS));
             refreshDimensions();
         }
+        if (DATA_YAW.equals(key) && level().isClientSide) {
+            setYRot(entityData.get(DATA_YAW));
+        }
+    }
+
+    @Override
+    public void lerpTo(double x, double y, double z, float yRot, float xRot, int steps) {
+        lerpX = x;
+        lerpY = y;
+        lerpZ = z;
+        lerpSteps = 3;
+    }
+
+    private void tickLerp() {
+        if (lerpSteps <= 0) return;
+        double nx = getX() + (lerpX - getX()) / lerpSteps;
+        double ny = getY() + (lerpY - getY()) / lerpSteps;
+        double nz = getZ() + (lerpZ - getZ()) / lerpSteps;
+        lerpSteps--;
+        setPos(nx, ny, nz);
+    }
+
+    public boolean isAimedAt(Player player) {
+        Vec3 eye = player.getEyePosition();
+        Vec3 end = eye.add(player.getViewVector(1.0f).scale(player.entityInteractionRange() + 2.0));
+        return raycastParts(eye, end, position(), getYRot()) != null;
+    }
+
+    @Nullable
+    public PartHit raycastParts(Vec3 from, Vec3 to, Vec3 origin, float yaw) {
+        double angle = Math.toRadians(yaw);
+        double sin = Math.sin(angle);
+        double cos = Math.cos(angle);
+        Vec3 a = unrotate(from.subtract(origin), sin, cos);
+        Vec3 b = unrotate(to.subtract(origin), sin, cos);
+
+        PartHit best = null;
+        for (Part part : parts) {
+            AABB box = new AABB(part.x() - getOriginX(), part.y() - getOriginY(), part.z() - getOriginZ(),
+                    part.x() - getOriginX() + 1.0, part.y() - getOriginY() + 1.0, part.z() - getOriginZ() + 1.0);
+            var hit = box.clip(a, b);
+            if (hit.isPresent()) {
+                double distance = hit.get().distanceTo(a);
+                if (best == null || distance < best.distance()) {
+                    best = new PartHit(part, distance);
+                }
+            }
+        }
+        return best;
+    }
+
+    private static Vec3 unrotate(Vec3 v, double sin, double cos) {
+        return new Vec3(v.x * cos + v.z * sin, v.y, -v.x * sin + v.z * cos);
     }
 
     @Override
@@ -279,7 +350,10 @@ public class RocketEntity extends Entity {
     @Override
     public void tick() {
         super.tick();
-        if (level().isClientSide) return;
+        if (level().isClientSide) {
+            tickLerp();
+            return;
+        }
         if (parts.isEmpty()) {
             discard();
             return;
@@ -290,28 +364,39 @@ public class RocketEntity extends Entity {
         Vec3 velocity = getDeltaMovement();
         boolean thrusting = false;
 
-        if (pilot != null) {
-            float turn = MAX_TURN / (1.0f + parts.size() / 60.0f);
-            if (pilot.xxa != 0.0f) {
-                setYRot(getYRot() - Math.signum(pilot.xxa) * turn);
-            }
+        float turnMax = MAX_TURN / (1.0f + parts.size() / 60.0f);
+        float turnInput = pilot != null ? Math.signum(pilot.xxa) : 0.0f;
+        yawVelocity = (yawVelocity - turnInput * turnMax * 0.18f) * 0.82f;
+        yawVelocity = Mth.clamp(yawVelocity, -turnMax, turnMax);
+        if (Math.abs(yawVelocity) < 0.001f) yawVelocity = 0.0f;
+        setYRot(getYRot() + yawVelocity);
+        entityData.set(DATA_YAW, getYRot());
 
-            if (pilot.zza > 0.0f && fuelMb > 0.0 && !engineParts.isEmpty() && thrustLocal.lengthSqr() > 1.0E-6) {
-                double weight = Math.max(1, parts.size());
-                double perEngine = GRAVITY * THRUST_PER_WEIGHT / weight;
-                Vec3 accel = toWorld(thrustLocal).scale(perEngine);
-                if (accel.length() > MAX_ACCEL) {
-                    accel = accel.normalize().scale(MAX_ACCEL);
-                }
-                velocity = velocity.add(accel);
-                fuelMb = Math.max(0.0, fuelMb - FUEL_PER_ENGINE_TICK * engineParts.size());
-                thrusting = true;
-            } else if (pilot.zza < 0.0f) {
-                velocity = velocity.scale(0.9);
+        boolean wantsThrust = pilot != null && pilot.zza > 0.0f && fuelMb > 0.0
+                && !engineParts.isEmpty() && thrustLocal.lengthSqr() > 1.0E-6;
+        throttle += ((wantsThrust ? 1.0f : 0.0f) - throttle) * 0.2f;
+        if (throttle < 0.01f) throttle = 0.0f;
+
+        if (throttle > 0.0f && fuelMb > 0.0) {
+            double weight = Math.max(1, parts.size());
+            double perEngine = GRAVITY * THRUST_PER_WEIGHT / weight;
+            Vec3 accel = toWorld(thrustLocal).scale(perEngine);
+            if (accel.length() > MAX_ACCEL) {
+                accel = accel.normalize().scale(MAX_ACCEL);
             }
+            velocity = velocity.add(accel.scale(throttle));
+            fuelMb = Math.max(0.0, fuelMb - FUEL_PER_ENGINE_TICK * engineParts.size() * throttle);
+            thrusting = throttle > 0.05f;
         }
 
-        if (!inSpace) {
+        if (pilot != null && pilot.zza < 0.0f) {
+            velocity = velocity.scale(0.9);
+        }
+
+        boolean resting = onGround() && velocity.y <= 0.0;
+        if (resting) {
+            velocity = new Vec3(velocity.x, 0.0, velocity.z);
+        } else if (!inSpace) {
             velocity = velocity.add(0.0, -GRAVITY, 0.0);
         }
         setDeltaMovement(velocity);
@@ -319,7 +404,10 @@ public class RocketEntity extends Entity {
 
         Vec3 after = getDeltaMovement().scale(inSpace ? SPACE_DRAG : DRAG);
         if (onGround()) {
-            after = new Vec3(after.x * 0.7, after.y, after.z * 0.7);
+            after = new Vec3(after.x * 0.7, Math.max(after.y, 0.0), after.z * 0.7);
+        }
+        if (after.lengthSqr() < 1.0E-6) {
+            after = Vec3.ZERO;
         }
         setDeltaMovement(after);
 
