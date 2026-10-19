@@ -107,6 +107,19 @@ public class ModBlocks {
                     .noOcclusion())
     );
 
+    public static final RocketControllerBlock ROCKET_CONTROLLER_BLOCK = Registry.register(
+            BuiltInRegistries.BLOCK,
+            ResourceLocation.fromNamespaceAndPath("space-trek", "rocket_controller"),
+            new RocketControllerBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK))
+    );
+
+    public static final RocketEngineBlock ROCKET_ENGINE_BLOCK = Registry.register(
+            BuiltInRegistries.BLOCK,
+            ResourceLocation.fromNamespaceAndPath("space-trek", "rocket_engine"),
+            new RocketEngineBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
+                    .noOcclusion())
+    );
+
     public static final PowerCableBlock POWER_CABLE_BLOCK = Registry.register(
             BuiltInRegistries.BLOCK,
             ResourceLocation.fromNamespaceAndPath("space-trek", "power_cable"),

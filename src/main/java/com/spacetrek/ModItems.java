@@ -72,6 +72,16 @@ public class ModItems {
             new BlockItem(ModBlocks.SOLAR_PANEL_BLOCK, new Item.Properties())
     );
 
+    public static final BlockItem ROCKET_CONTROLLER = register(
+            "rocket_controller",
+            new BlockItem(ModBlocks.ROCKET_CONTROLLER_BLOCK, new Item.Properties())
+    );
+
+    public static final BlockItem ROCKET_ENGINE = register(
+            "rocket_engine",
+            new BlockItem(ModBlocks.ROCKET_ENGINE_BLOCK, new Item.Properties())
+    );
+
     public static final BlockItem POWER_CABLE = register(
             "power_cable",
             new BlockItem(ModBlocks.POWER_CABLE_BLOCK, new Item.Properties())
@@ -135,6 +145,8 @@ public class ModItems {
                     entries.accept(INTAKE);
                     entries.accept(COAL_GENERATOR);
                     entries.accept(SOLAR_PANEL);
+                    entries.accept(ROCKET_CONTROLLER);
+                    entries.accept(ROCKET_ENGINE);
                     entries.accept(POWER_CABLE);
                     entries.accept(FLUID_PIPE);
                     entries.accept(FLUID_PUMP);

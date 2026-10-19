@@ -34,5 +34,12 @@
   "message.space-trek.solar_angle": "Solar Panel: not facing the sun",
   "message.space-trek.solar_rotated": "Solar Panel rotated",
   "gamerule.spacetrekDayLengthMinutes": "Day length (minutes)",
-  "gamerule.spacetrekDayLengthMinutes.description": "How many real minutes one Minecraft day lasts. 20 is the normal Minecraft day. Changes how fast the sun, sky and lighting move."
+  "gamerule.spacetrekDayLengthMinutes.description": "How many real minutes one Minecraft day lasts. 20 is the normal Minecraft day. Changes how fast the sun, sky and lighting move.",
+  "block.space-trek.rocket_controller": "Rocket Controller",
+  "block.space-trek.rocket_engine": "Rocket Engine",
+  "entity.space-trek.rocket": "Rocket",
+  "message.space-trek.rocket_assembled": "Rocket assembled! Right-click it to board. Look where you want to fly, W = thrust, S = brake, Shift = exit.",
+  "message.space-trek.rocket_no_engine": "The rocket needs at least one Rocket Engine connected to the controller.",
+  "message.space-trek.rocket_too_big": "This rocket is too large (max 512 blocks).",
+  "message.space-trek.rocket_status": "Fuel: %s buckets | Engines: %s | Speed: %s b/s"
 }

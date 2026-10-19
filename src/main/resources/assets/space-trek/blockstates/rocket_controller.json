@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "space-trek:block/rocket_controller"
+    }
+  }
+}

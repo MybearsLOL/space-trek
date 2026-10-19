@@ -126,6 +126,26 @@ public class FuelTankBlockEntity extends BlockEntity implements FluidSink {
         }
     }
 
+    public static int drainRocketFuel(List<FuelTankBlockEntity> tanks) {
+        List<FuelTankBlockEntity> fueled = new ArrayList<>();
+        int total = 0;
+        for (FuelTankBlockEntity tank : tanks) {
+            if (tank.fluidType == FluidType.ROCKET_FUEL && tank.amountMb > 0) {
+                fueled.add(tank);
+                total += tank.amountMb;
+            }
+        }
+        if (!fueled.isEmpty()) {
+            applyGroup(fueled, FluidType.EMPTY, 0);
+        }
+        return total;
+    }
+
+    public static void fillRocketFuel(List<FuelTankBlockEntity> tanks, int amountMb) {
+        if (tanks.isEmpty() || amountMb <= 0) return;
+        applyGroup(tanks, FluidType.ROCKET_FUEL, amountMb);
+    }
+
     private void setShare(FluidType type, int amount, int total, int capacity) {
         boolean changed = fluidType != type || amountMb != amount
                 || groupTotalMb != total || groupCapacityMb != capacity;

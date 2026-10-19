@@ -12,6 +12,8 @@
     "space-trek:cooler_controller",
     "space-trek:holo_projector",
     "space-trek:fluid_pump",
-    "space-trek:solar_panel"
+    "space-trek:solar_panel",
+    "space-trek:rocket_controller",
+    "space-trek:rocket_engine"
   ]
 }
