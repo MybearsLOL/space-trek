@@ -21,6 +21,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 public class SpaceTrekClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
+		RocketControls.init();
 		// Rocket fuel
 		FluidRenderHandlerRegistry.INSTANCE.register(
 				ModFluids.ROCKET_FUEL_SOURCE,

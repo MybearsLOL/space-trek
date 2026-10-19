@@ -1,7 +1,6 @@
 package com.spacetrek.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
 import com.spacetrek.RocketEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -13,10 +12,10 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Quaternionf;
 
 public class RocketRenderer extends EntityRenderer<RocketEntity> {
 
@@ -37,12 +36,12 @@ public class RocketRenderer extends EntityRenderer<RocketEntity> {
     @Override
     public void render(RocketEntity entity, float entityYaw, float partialTick, PoseStack poseStack,
                        MultiBufferSource bufferSource, int packedLight) {
-        float yaw = Mth.rotLerp(partialTick, entity.yRotO, entity.getYRot());
+        Quaternionf rotation = entity.getRenderOrientation(partialTick);
         float half = entity.getBbHeight() / 2.0f;
 
         poseStack.pushPose();
         poseStack.translate(0.0, half, 0.0);
-        poseStack.mulPose(Axis.YP.rotationDegrees(-yaw));
+        poseStack.mulPose(rotation);
         poseStack.translate(0.0, -half, 0.0);
 
         double ox = entity.getOriginX();
@@ -54,7 +53,7 @@ public class RocketRenderer extends EntityRenderer<RocketEntity> {
             Entity viewer = minecraft.getCameraEntity();
             Vec3 eye = viewer.getEyePosition(partialTick);
             Vec3 end = eye.add(viewer.getViewVector(partialTick).scale(6.0));
-            RocketEntity.PartHit hit = entity.raycastParts(eye, end, entity.getPosition(partialTick), yaw);
+            RocketEntity.PartHit hit = entity.raycastParts(eye, end, entity.getPosition(partialTick), rotation);
             if (hit != null) {
                 AABB box = new AABB(hit.part().x() - ox, hit.part().y() - oy, hit.part().z() - oz,
                         hit.part().x() - ox + 1.0, hit.part().y() - oy + 1.0, hit.part().z() - oz + 1.0).inflate(0.002);

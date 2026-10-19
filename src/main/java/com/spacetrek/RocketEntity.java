@@ -17,6 +17,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.TicketType;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -28,6 +29,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Rotation;
@@ -37,6 +39,8 @@ import net.minecraft.world.level.portal.DimensionTransition;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 public class RocketEntity extends Entity {
 
@@ -46,20 +50,27 @@ public class RocketEntity extends Entity {
     public record PartHit(Part part, double distance) {
     }
 
+    public static final int INPUT_ROLL_LEFT = 1;
+    public static final int INPUT_ROLL_RIGHT = 2;
+    public static final int INPUT_THRUST = 4;
+    public static final int INPUT_DETHRUST = 8;
+
     private static final EntityDataAccessor<CompoundTag> DATA_PARTS =
             SynchedEntityData.defineId(RocketEntity.class, EntityDataSerializers.COMPOUND_TAG);
 
-    private static final EntityDataAccessor<Float> DATA_YAW =
-            SynchedEntityData.defineId(RocketEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Quaternionf> DATA_ORIENTATION =
+            SynchedEntityData.defineId(RocketEntity.class, EntityDataSerializers.QUATERNION);
 
     public static final double GRAVITY = 0.05;
     public static final double DRAG = 0.95;
     public static final double SPACE_DRAG = 0.999;
     public static final double MAX_ACCEL = 0.15;
+    public static final double MAX_SPEED = 2.4;
     public static final double THRUST_PER_WEIGHT = 20.0;
     public static final double FUEL_PER_ENGINE_TICK = 1.5;
-    private static final float MAX_TURN = 3.0f;
+    private static final float MAX_TURN_DEGREES = 2.5f;
     private static final int MAX_EXHAUST_ENGINES = 8;
+    private static final int INPUT_TIMEOUT = 10;
 
     private List<Part> parts = new ArrayList<>();
     private final List<Part> seats = new ArrayList<>();
@@ -71,11 +82,26 @@ public class RocketEntity extends Entity {
     private int maxY;
     private int maxZ;
     private Vec3 thrustLocal = Vec3.ZERO;
+    private Vec3 forwardLocal = new Vec3(0.0, 0.0, 1.0);
     private float boxWidth = 1.0f;
     private float boxHeight = 1.0f;
     private double fuelMb = 0.0;
-    private float yawVelocity = 0.0f;
+
+    private final Quaternionf orientation = new Quaternionf();
+    private final Quaternionf targetOrientation = new Quaternionf();
+    private final Quaternionf renderOrientation = new Quaternionf();
+    private final Quaternionf renderOrientationOld = new Quaternionf();
+    private boolean orientationReceived = false;
+
+    private float angularPitch = 0.0f;
+    private float angularYaw = 0.0f;
+    private float angularRoll = 0.0f;
     private float throttle = 0.0f;
+    private float brake = 0.0f;
+
+    private int inputFlags = 0;
+    private int inputTick = -1000;
+
     private int lerpSteps;
     private double lerpX;
     private double lerpY;
@@ -105,6 +131,19 @@ public class RocketEntity extends Entity {
         return (minZ + maxZ + 1) / 2.0;
     }
 
+    public void setInput(int flags) {
+        inputFlags = flags;
+        inputTick = tickCount;
+    }
+
+    public Quaternionf getRenderOrientation(float partialTick) {
+        return new Quaternionf(renderOrientationOld).slerp(renderOrientation, partialTick);
+    }
+
+    private Quaternionf currentOrientation() {
+        return level().isClientSide ? renderOrientation : orientation;
+    }
+
     public void setParts(List<Part> list, double fuel) {
         parts = new ArrayList<>(list);
         fuelMb = fuel;
@@ -117,6 +156,7 @@ public class RocketEntity extends Entity {
         seats.clear();
         engineParts.clear();
         thrustLocal = Vec3.ZERO;
+        forwardLocal = new Vec3(0.0, 0.0, 1.0);
         if (parts.isEmpty()) {
             minX = 0;
             minY = 0;
@@ -152,6 +192,10 @@ public class RocketEntity extends Entity {
             }
         }
         thrustLocal = thrust;
+        if (!seats.isEmpty()) {
+            Direction facing = seats.get(0).state().getValue(RocketSeatBlock.FACING);
+            forwardLocal = new Vec3(facing.getStepX(), 0.0, facing.getStepZ());
+        }
         boxWidth = Math.max(maxX - minX + 1, maxZ - minZ + 1);
         boxHeight = maxY - minY + 1;
     }
@@ -196,18 +240,24 @@ public class RocketEntity extends Entity {
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         builder.define(DATA_PARTS, new CompoundTag());
-        builder.define(DATA_YAW, 0.0f);
+        builder.define(DATA_ORIENTATION, new Quaternionf());
     }
 
     @Override
     public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
         super.onSyncedDataUpdated(key);
-        if (DATA_PARTS.equals(key) && level().isClientSide) {
+        if (!level().isClientSide) return;
+        if (DATA_PARTS.equals(key)) {
             readParts(entityData.get(DATA_PARTS));
             refreshDimensions();
         }
-        if (DATA_YAW.equals(key) && level().isClientSide) {
-            setYRot(entityData.get(DATA_YAW));
+        if (DATA_ORIENTATION.equals(key)) {
+            targetOrientation.set(entityData.get(DATA_ORIENTATION));
+            if (!orientationReceived) {
+                orientationReceived = true;
+                renderOrientation.set(targetOrientation);
+                renderOrientationOld.set(targetOrientation);
+            }
         }
     }
 
@@ -228,19 +278,30 @@ public class RocketEntity extends Entity {
         setPos(nx, ny, nz);
     }
 
+    private Vec3 rotateVector(Quaternionf q, Vec3 v) {
+        Vector3f t = new Vector3f((float) v.x, (float) v.y, (float) v.z);
+        q.transform(t);
+        return new Vec3(t.x, t.y, t.z);
+    }
+
+    private Vec3 toWorld(Vec3 local) {
+        double pivot = boxHeight / 2.0;
+        Vec3 rotated = rotateVector(currentOrientation(), new Vec3(local.x, local.y - pivot, local.z));
+        return new Vec3(rotated.x, rotated.y + pivot, rotated.z);
+    }
+
     public boolean isAimedAt(Player player) {
         Vec3 eye = player.getEyePosition();
         Vec3 end = eye.add(player.getViewVector(1.0f).scale(player.entityInteractionRange() + 2.0));
-        return raycastParts(eye, end, position(), getYRot()) != null;
+        return raycastParts(eye, end, position(), currentOrientation()) != null;
     }
 
     @Nullable
-    public PartHit raycastParts(Vec3 from, Vec3 to, Vec3 origin, float yaw) {
-        double angle = Math.toRadians(yaw);
-        double sin = Math.sin(angle);
-        double cos = Math.cos(angle);
-        Vec3 a = unrotate(from.subtract(origin), sin, cos);
-        Vec3 b = unrotate(to.subtract(origin), sin, cos);
+    public PartHit raycastParts(Vec3 from, Vec3 to, Vec3 origin, Quaternionf rotation) {
+        Quaternionf inverse = new Quaternionf(rotation).conjugate();
+        double pivot = boxHeight / 2.0;
+        Vec3 a = unrotate(inverse, from.subtract(origin), pivot);
+        Vec3 b = unrotate(inverse, to.subtract(origin), pivot);
 
         PartHit best = null;
         for (Part part : parts) {
@@ -257,15 +318,21 @@ public class RocketEntity extends Entity {
         return best;
     }
 
-    private static Vec3 unrotate(Vec3 v, double sin, double cos) {
-        return new Vec3(v.x * cos + v.z * sin, v.y, -v.x * sin + v.z * cos);
+    private Vec3 unrotate(Quaternionf inverse, Vec3 v, double pivot) {
+        Vec3 rotated = rotateVector(inverse, new Vec3(v.x, v.y - pivot, v.z));
+        return new Vec3(rotated.x, rotated.y + pivot, rotated.z);
     }
 
     @Override
     protected void readAdditionalSaveData(CompoundTag tag) {
         readParts(tag);
         fuelMb = tag.getDouble("Fuel");
+        if (tag.contains("OrientW")) {
+            orientation.set(tag.getFloat("OrientX"), tag.getFloat("OrientY"), tag.getFloat("OrientZ"), tag.getFloat("OrientW"));
+            orientation.normalize();
+        }
         entityData.set(DATA_PARTS, writeParts(false));
+        entityData.set(DATA_ORIENTATION, new Quaternionf(orientation));
         refreshDimensions();
     }
 
@@ -273,6 +340,10 @@ public class RocketEntity extends Entity {
     protected void addAdditionalSaveData(CompoundTag tag) {
         tag.put("Parts", writeParts(true).getList("Parts", Tag.TAG_COMPOUND));
         tag.putDouble("Fuel", fuelMb);
+        tag.putFloat("OrientX", orientation.x);
+        tag.putFloat("OrientY", orientation.y);
+        tag.putFloat("OrientZ", orientation.z);
+        tag.putFloat("OrientW", orientation.w);
     }
 
     @Override
@@ -320,13 +391,6 @@ public class RocketEntity extends Entity {
         return InteractionResult.CONSUME;
     }
 
-    private Vec3 toWorld(Vec3 local) {
-        double angle = Math.toRadians(-getYRot());
-        double sin = Math.sin(angle);
-        double cos = Math.cos(angle);
-        return new Vec3(local.x * cos + local.z * sin, local.y, -local.x * sin + local.z * cos);
-    }
-
     @Override
     protected void positionRider(Entity passenger, Entity.MoveFunction callback) {
         int index = getPassengers().indexOf(passenger);
@@ -352,6 +416,8 @@ public class RocketEntity extends Entity {
         super.tick();
         if (level().isClientSide) {
             tickLerp();
+            renderOrientationOld.set(renderOrientation);
+            renderOrientation.slerp(targetOrientation, 0.5f);
             return;
         }
         if (parts.isEmpty()) {
@@ -361,26 +427,50 @@ public class RocketEntity extends Entity {
 
         boolean inSpace = level().dimension() == ModDimensions.SPACE_LEVEL;
         Player pilot = pilot();
+        int flags = tickCount - inputTick <= INPUT_TIMEOUT ? inputFlags : 0;
         Vec3 velocity = getDeltaMovement();
         boolean thrusting = false;
 
-        float turnMax = MAX_TURN / (1.0f + parts.size() / 60.0f);
-        float turnInput = pilot != null ? Math.signum(pilot.xxa) : 0.0f;
-        yawVelocity = (yawVelocity - turnInput * turnMax * 0.18f) * 0.82f;
-        yawVelocity = Mth.clamp(yawVelocity, -turnMax, turnMax);
-        if (Math.abs(yawVelocity) < 0.001f) yawVelocity = 0.0f;
-        setYRot(getYRot() + yawVelocity);
-        entityData.set(DATA_YAW, getYRot());
+        float maxRate = (float) Math.toRadians(MAX_TURN_DEGREES) / (1.0f + parts.size() / 60.0f);
+        float yawInput = pilot != null ? Math.signum(pilot.xxa) : 0.0f;
+        float pitchInput = pilot != null ? Math.signum(pilot.zza) : 0.0f;
+        float rollInput = ((flags & INPUT_ROLL_RIGHT) != 0 ? 1.0f : 0.0f) - ((flags & INPUT_ROLL_LEFT) != 0 ? 1.0f : 0.0f);
+        if (pilot == null) {
+            yawInput = 0.0f;
+            pitchInput = 0.0f;
+            rollInput = 0.0f;
+        }
 
-        boolean wantsThrust = pilot != null && pilot.zza > 0.0f && fuelMb > 0.0
-                && !engineParts.isEmpty() && thrustLocal.lengthSqr() > 1.0E-6;
-        throttle += ((wantsThrust ? 1.0f : 0.0f) - throttle) * 0.2f;
+        angularYaw += (yawInput * maxRate - angularYaw) * 0.15f;
+        angularPitch += (pitchInput * maxRate - angularPitch) * 0.15f;
+        angularRoll += (rollInput * maxRate - angularRoll) * 0.15f;
+        if (Math.abs(angularYaw) < 1.0E-4f) angularYaw = 0.0f;
+        if (Math.abs(angularPitch) < 1.0E-4f) angularPitch = 0.0f;
+        if (Math.abs(angularRoll) < 1.0E-4f) angularRoll = 0.0f;
+
+        if (angularYaw != 0.0f || angularPitch != 0.0f || angularRoll != 0.0f) {
+            float fx = (float) forwardLocal.x;
+            float fz = (float) forwardLocal.z;
+            orientation.rotateAxis(angularYaw, 0.0f, 1.0f, 0.0f);
+            orientation.rotateAxis(angularPitch, fz, 0.0f, -fx);
+            orientation.rotateAxis(angularRoll, fx, 0.0f, fz);
+            orientation.normalize();
+            entityData.set(DATA_ORIENTATION, new Quaternionf(orientation));
+        }
+
+        boolean hasFuel = fuelMb > 0.0 && !engineParts.isEmpty();
+        float thrustTarget = pilot != null && (flags & INPUT_THRUST) != 0 && hasFuel && thrustLocal.lengthSqr() > 1.0E-6 ? 1.0f : 0.0f;
+        float brakeTarget = pilot != null && (flags & INPUT_DETHRUST) != 0 && hasFuel ? 1.0f : 0.0f;
+        throttle += (thrustTarget - throttle) * 0.2f;
+        brake += (brakeTarget - brake) * 0.2f;
         if (throttle < 0.01f) throttle = 0.0f;
+        if (brake < 0.01f) brake = 0.0f;
+
+        double weight = Math.max(1, parts.size());
+        double perEngine = GRAVITY * THRUST_PER_WEIGHT / weight;
 
         if (throttle > 0.0f && fuelMb > 0.0) {
-            double weight = Math.max(1, parts.size());
-            double perEngine = GRAVITY * THRUST_PER_WEIGHT / weight;
-            Vec3 accel = toWorld(thrustLocal).scale(perEngine);
+            Vec3 accel = rotateVector(orientation, thrustLocal).scale(perEngine);
             if (accel.length() > MAX_ACCEL) {
                 accel = accel.normalize().scale(MAX_ACCEL);
             }
@@ -389,8 +479,14 @@ public class RocketEntity extends Entity {
             thrusting = throttle > 0.05f;
         }
 
-        if (pilot != null && pilot.zza < 0.0f) {
-            velocity = velocity.scale(0.9);
+        if (brake > 0.0f && fuelMb > 0.0) {
+            double speed = velocity.length();
+            if (speed > 1.0E-4) {
+                double brakeAccel = Math.min(MAX_ACCEL, perEngine * engineParts.size()) * brake;
+                double dv = Math.min(speed, brakeAccel);
+                velocity = velocity.subtract(velocity.normalize().scale(dv));
+                fuelMb = Math.max(0.0, fuelMb - FUEL_PER_ENGINE_TICK * engineParts.size() * brake * 0.5);
+            }
         }
 
         boolean resting = onGround() && velocity.y <= 0.0;
@@ -398,6 +494,9 @@ public class RocketEntity extends Entity {
             velocity = new Vec3(velocity.x, 0.0, velocity.z);
         } else if (!inSpace) {
             velocity = velocity.add(0.0, -GRAVITY, 0.0);
+        }
+        if (velocity.length() > MAX_SPEED) {
+            velocity = velocity.normalize().scale(MAX_SPEED);
         }
         setDeltaMovement(velocity);
         move(MoverType.SELF, velocity);
@@ -414,6 +513,10 @@ public class RocketEntity extends Entity {
         if (!inSpace && getY() < level().getMinBuildHeight() + 1) {
             setPos(getX(), level().getMinBuildHeight() + 1, getZ());
             setDeltaMovement(after.x, 0.0, after.z);
+        }
+
+        if (level() instanceof ServerLevel serverLevel && tickCount % 4 == 0) {
+            serverLevel.getChunkSource().addRegionTicket(TicketType.PORTAL, new ChunkPos(blockPosition()), 3, blockPosition());
         }
 
         if (pilot instanceof ServerPlayer player && tickCount % 5 == 0) {
@@ -433,7 +536,7 @@ public class RocketEntity extends Entity {
                 Vec3 local = new Vec3(engine.x() + 0.5 - getOriginX(), engine.y() - getOriginY() + 0.5, engine.z() + 0.5 - getOriginZ())
                         .add(nozzle.scale(0.8));
                 Vec3 world = toWorld(local);
-                Vec3 push = toWorld(nozzle);
+                Vec3 push = rotateVector(orientation, nozzle);
                 serverLevel.sendParticles(ParticleTypes.FLAME, getX() + world.x, getY() + world.y, getZ() + world.z,
                         0, push.x, push.y, push.z, 0.35);
             }
@@ -467,7 +570,10 @@ public class RocketEntity extends Entity {
     private boolean disassemble() {
         if (!(level() instanceof ServerLevel level)) return false;
 
-        int quarter = Math.floorMod(Math.round(getYRot() / 90.0f), 4);
+        Vector3f forward = new Vector3f(0.0f, 0.0f, 1.0f);
+        orientation.transform(forward);
+        double yawDegrees = -Math.toDegrees(Math.atan2(forward.x, forward.z));
+        int quarter = Math.floorMod(Math.round((float) (yawDegrees / 90.0)), 4);
         Rotation rotation = switch (quarter) {
             case 1 -> Rotation.CLOCKWISE_90;
             case 2 -> Rotation.CLOCKWISE_180;

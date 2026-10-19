@@ -4,6 +4,8 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.InteractionResult;
@@ -24,6 +26,12 @@ public class SpaceTrek implements ModInitializer {
         ModItems.initialize();
         ModBlockEntities.initialize();
         ModEntities.initialize();
+        PayloadTypeRegistry.playC2S().register(RocketInputPayload.TYPE, RocketInputPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(RocketInputPayload.TYPE, (payload, context) -> {
+            if (context.player().getVehicle() instanceof RocketEntity rocket) {
+                rocket.setInput(payload.flags());
+            }
+        });
         UseEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
             if (entity instanceof RocketEntity rocket && !rocket.isAimedAt(player)) {
                 return InteractionResult.FAIL;

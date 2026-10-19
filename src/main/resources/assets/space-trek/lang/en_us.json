@@ -38,7 +38,7 @@
   "block.space-trek.rocket_controller": "Rocket Controller",
   "block.space-trek.rocket_engine": "Rocket Engine",
   "entity.space-trek.rocket": "Rocket",
-  "message.space-trek.rocket_assembled": "Ship assembled! Right-click it to sit in a seat. Sneak + right-click to rebuild it. Seated: W = fire engines, S = brake, A/D = turn, Shift = exit.",
+  "message.space-trek.rocket_assembled": "Ship assembled! Right-click it to sit in a seat. Sneak + right-click to rebuild it. Seated: W/S = pitch, A/D = turn, Q/E = tilt, R = thrust, F = dethrust, Shift = exit.",
   "message.space-trek.rocket_too_big": "This rocket is too large (max 512 blocks).",
   "message.space-trek.rocket_status": "Fuel: %s buckets | Engines: %s | Speed: %s b/s",
   "block.space-trek.rocket_seat": "Rocket Seat",
