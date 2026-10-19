@@ -16,7 +16,7 @@ import net.minecraft.world.level.GameRules;
 public final class ModGameRules {
 
     /** Real minutes one Minecraft day lasts (1 to 1440 = 24 hours). Default 20 = vanilla. */
-    public static final GameRules.Key<GameRules.IntRule> DAY_LENGTH_MINUTES = GameRuleRegistry.register(
+    public static final GameRules.Key<GameRules.IntegerValue> DAY_LENGTH_MINUTES = GameRuleRegistry.register(
             "spacetrekDayLengthMinutes",
             GameRules.Category.UPDATES,
             GameRuleFactory.createIntRule(20, 1, 1440));
