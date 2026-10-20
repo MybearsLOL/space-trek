@@ -66,6 +66,7 @@ public final class RocketControls {
             }
         }
         if (thrustOn) flags |= RocketEntity.INPUT_THRUST;
+        if (minecraft.screen == null && minecraft.options.keyJump.isDown()) flags |= RocketEntity.INPUT_JUMP;
 
         heartbeat++;
         if (flags != lastFlags || heartbeat >= 5) {

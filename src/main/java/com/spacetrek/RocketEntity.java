@@ -2,6 +2,8 @@ package com.spacetrek;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Locale;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -57,6 +59,7 @@ public class RocketEntity extends Entity {
     public static final int INPUT_ROLL_RIGHT = 2;
     public static final int INPUT_THRUST = 4;
     public static final int INPUT_DETHRUST = 8;
+    public static final int INPUT_JUMP = 16;
 
     private static final EntityDataAccessor<CompoundTag> DATA_PARTS =
             SynchedEntityData.defineId(RocketEntity.class, EntityDataSerializers.COMPOUND_TAG);
@@ -107,6 +110,7 @@ public class RocketEntity extends Entity {
 
     private int inputFlags = 0;
     private int inputTick = -1000;
+    private boolean dismountRequested = false;
 
     private int lerpSteps;
     private double lerpX;
@@ -137,7 +141,14 @@ public class RocketEntity extends Entity {
         return (minZ + maxZ + 1) / 2.0;
     }
 
+    public float getShipSize() {
+        return Math.max(boxWidth, boxHeight);
+    }
+
     public void setInput(int flags) {
+        if ((flags & INPUT_JUMP) != 0 && (inputFlags & INPUT_JUMP) == 0) {
+            dismountRequested = true;
+        }
         inputFlags = flags;
         inputTick = tickCount;
     }
@@ -544,7 +555,31 @@ public class RocketEntity extends Entity {
 
     @Override
     public Vec3 getDismountLocationForPassenger(LivingEntity passenger) {
-        return new Vec3(getX() + boxWidth / 2.0 + 1.0, getY(), getZ());
+        int index = getPassengers().indexOf(passenger);
+        if (index < 0 || seats.isEmpty()) {
+            return new Vec3(getX() + boxWidth / 2.0 + 1.0, getY(), getZ());
+        }
+        Part seat = seats.get(Math.min(index, seats.size() - 1));
+        Set<Long> occupied = new HashSet<>();
+        for (Part part : parts) {
+            occupied.add(BlockPos.asLong(part.x(), part.y(), part.z()));
+        }
+        int[][] offsets = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+        for (int pass = 0; pass < 2; pass++) {
+            for (int[] offset : offsets) {
+                int cx = seat.x() + offset[0];
+                int cz = seat.z() + offset[1];
+                int cy = seat.y();
+                if (occupied.contains(BlockPos.asLong(cx, cy, cz)) || occupied.contains(BlockPos.asLong(cx, cy + 1, cz))) continue;
+                if (pass == 0 && !occupied.contains(BlockPos.asLong(cx, cy - 1, cz))) continue;
+                Vec3 local = new Vec3(cx + 0.5 - getOriginX(), cy - getOriginY() + 0.05, cz + 0.5 - getOriginZ());
+                Vec3 world = toWorld(local);
+                return new Vec3(getX() + world.x, getY() + world.y, getZ() + world.z);
+            }
+        }
+        Vec3 local = new Vec3(seat.x() + 0.5 - getOriginX(), seat.y() + 1.0 - getOriginY(), seat.z() + 0.5 - getOriginZ());
+        Vec3 world = toWorld(local);
+        return new Vec3(getX() + world.x, getY() + world.y, getZ() + world.z);
     }
 
     @Nullable
@@ -574,6 +609,14 @@ public class RocketEntity extends Entity {
 
         boolean inSpace = level().dimension() == ModDimensions.SPACE_LEVEL;
         Player pilot = pilot();
+        if (dismountRequested) {
+            dismountRequested = false;
+            if (pilot() instanceof ServerPlayer rider) {
+                Vec3 spot = getDismountLocationForPassenger(rider);
+                rider.stopRiding();
+                rider.connection.teleport(spot.x, spot.y, spot.z, rider.getYRot(), rider.getXRot());
+            }
+        }
         int flags = tickCount - inputTick <= INPUT_TIMEOUT ? inputFlags : 0;
         Vec3 velocity = getDeltaMovement();
         boolean thrusting = false;

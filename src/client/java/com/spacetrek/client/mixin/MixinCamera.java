@@ -25,10 +25,22 @@ public abstract class MixinCamera {
     @Shadow
     public abstract Quaternionf rotation();
 
+    @Shadow
+    public abstract Vector3f getLookVector();
+
     @Inject(method = "setup", at = @At("TAIL"), require = 0)
     private void spacetrek$followShip(BlockGetter area, Entity entity, boolean detached, boolean thirdPersonReverse,
                                       float partialTick, CallbackInfo ci) {
-        if (detached || !(entity.getVehicle() instanceof RocketEntity rocket)) return;
+        if (!(entity.getVehicle() instanceof RocketEntity rocket)) return;
+        if (detached) {
+            float extra = Math.max(0.0f, rocket.getShipSize() * 0.8f - 1.5f);
+            if (extra > 0.0f) {
+                Vector3f back = getLookVector().mul(-extra);
+                Vec3 at = getPosition();
+                setPosition(at.x + back.x, at.y + back.y, at.z + back.z);
+            }
+            return;
+        }
         Quaternionf ship = rocket.getViewOrientation(partialTick);
         Quaternionf look = rotation();
         look.set(new Quaternionf(ship).mul(look));
