@@ -3,7 +3,8 @@
 	"package": "com.spacetrek.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
-		"MixinFogRenderer"
+		"MixinFogRenderer",
+		"MixinLivingEntityRenderer"
 	],
 	"injectors": {
 		"defaultRequire": 1

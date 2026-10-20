@@ -5,7 +5,9 @@
 	"mixins": [
 		"ExampleMixin",
 		"MixinLivingEntity",
-		"EntityMixin"
+		"EntityMixin",
+		"MixinEntityShipCollision",
+		"MixinServerPlayerShip"
 	],
 	"injectors": {
 		"defaultRequire": 1

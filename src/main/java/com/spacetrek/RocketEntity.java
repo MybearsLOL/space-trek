@@ -30,6 +30,7 @@ import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Rotation;
@@ -38,6 +39,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.portal.DimensionTransition;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.phys.shapes.Shapes;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -86,6 +89,9 @@ public class RocketEntity extends Entity {
     private float boxWidth = 1.0f;
     private float boxHeight = 1.0f;
     private double fuelMb = 0.0;
+
+    private final List<AABB> localBoxes = new ArrayList<>();
+    private List<AABB> worldBoxes = new ArrayList<>();
 
     private final Quaternionf orientation = new Quaternionf();
     private final Quaternionf targetOrientation = new Quaternionf();
@@ -155,6 +161,7 @@ public class RocketEntity extends Entity {
     private void recompute() {
         seats.clear();
         engineParts.clear();
+        localBoxes.clear();
         thrustLocal = Vec3.ZERO;
         forwardLocal = new Vec3(0.0, 0.0, 1.0);
         if (parts.isEmpty()) {
@@ -198,6 +205,100 @@ public class RocketEntity extends Entity {
         }
         boxWidth = Math.max(maxX - minX + 1, maxZ - minZ + 1);
         boxHeight = maxY - minY + 1;
+        for (Part part : parts) {
+            VoxelShape shape;
+            try {
+                shape = part.state().getCollisionShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO);
+            } catch (Exception e) {
+                shape = Shapes.block();
+            }
+            for (AABB box : shape.toAabbs()) {
+                localBoxes.add(box.move(part.x() - getOriginX(), part.y() - getOriginY(), part.z() - getOriginZ()));
+            }
+        }
+    }
+
+    public List<AABB> getCollisionBoxes() {
+        return worldBoxes;
+    }
+
+    public float getSeatYaw(Entity passenger) {
+        int index = getPassengers().indexOf(passenger);
+        if (index < 0 || seats.isEmpty()) return 0.0f;
+        Part seat = seats.get(Math.min(index, seats.size() - 1));
+        return seat.state().getValue(RocketSeatBlock.FACING).toYRot();
+    }
+
+    private void updateWorldBoxes() {
+        List<AABB> out = new ArrayList<>(localBoxes.size());
+        for (AABB box : localBoxes) {
+            double loX = Double.MAX_VALUE;
+            double loY = Double.MAX_VALUE;
+            double loZ = Double.MAX_VALUE;
+            double hiX = -Double.MAX_VALUE;
+            double hiY = -Double.MAX_VALUE;
+            double hiZ = -Double.MAX_VALUE;
+            for (int i = 0; i < 8; i++) {
+                Vec3 corner = new Vec3((i & 1) == 0 ? box.minX : box.maxX,
+                        (i & 2) == 0 ? box.minY : box.maxY,
+                        (i & 4) == 0 ? box.minZ : box.maxZ);
+                Vec3 world = toWorld(corner);
+                loX = Math.min(loX, world.x);
+                loY = Math.min(loY, world.y);
+                loZ = Math.min(loZ, world.z);
+                hiX = Math.max(hiX, world.x);
+                hiY = Math.max(hiY, world.y);
+                hiZ = Math.max(hiZ, world.z);
+            }
+            out.add(new AABB(getX() + loX, getY() + loY, getZ() + loZ, getX() + hiX, getY() + hiY, getZ() + hiZ));
+        }
+        worldBoxes = out;
+    }
+
+    private boolean canCarry(Entity entity) {
+        if (entity == this || entity instanceof RocketEntity || entity.isPassenger() || !entity.onGround()) return false;
+        if (level().isClientSide) {
+            return entity instanceof Player player && player.isLocalPlayer();
+        }
+        return !(entity instanceof Player);
+    }
+
+    private void carryEntities(Vec3 oldPos, Quaternionf oldQ, List<AABB> oldBoxes) {
+        if (oldBoxes.isEmpty()) return;
+        Quaternionf newQ = currentOrientation();
+        Vec3 shift = position().subtract(oldPos);
+        boolean rotated = !oldQ.equals(newQ, 1.0E-6f);
+        if (shift.lengthSqr() < 1.0E-10 && !rotated) return;
+
+        Quaternionf delta = new Quaternionf(newQ).mul(new Quaternionf(oldQ).conjugate());
+        double pivot = boxHeight / 2.0;
+        Vector3f forward = new Vector3f(0.0f, 0.0f, 1.0f);
+        delta.transform(forward);
+        float yawDelta = (float) -Math.toDegrees(Math.atan2(forward.x, forward.z));
+
+        AABB area = getBoundingBox().inflate(Math.max(boxWidth, boxHeight) + 2.0);
+        for (Entity entity : level().getEntitiesOfClass(Entity.class, area, this::canCarry)) {
+            AABB feet = entity.getBoundingBox();
+            boolean standing = false;
+            for (AABB box : oldBoxes) {
+                if (feet.maxX > box.minX + 1.0E-3 && feet.minX < box.maxX - 1.0E-3
+                        && feet.maxZ > box.minZ + 1.0E-3 && feet.minZ < box.maxZ - 1.0E-3
+                        && Math.abs(feet.minY - box.maxY) < 0.15) {
+                    standing = true;
+                    break;
+                }
+            }
+            if (!standing) continue;
+
+            Vec3 relative = entity.position().subtract(oldPos).subtract(0.0, pivot, 0.0);
+            Vec3 turned = rotateVector(delta, relative);
+            Vec3 target = position().add(0.0, pivot, 0.0).add(turned);
+            entity.setPos(target.x, target.y, target.z);
+            if (rotated && entity instanceof Player) {
+                entity.setYRot(entity.getYRot() + yawDelta);
+                entity.yRotO += yawDelta;
+            }
+        }
     }
 
     @Override
@@ -353,7 +454,7 @@ public class RocketEntity extends Entity {
 
     @Override
     public boolean canBeCollidedWith() {
-        return true;
+        return false;
     }
 
     @Override
@@ -414,10 +515,16 @@ public class RocketEntity extends Entity {
     @Override
     public void tick() {
         super.tick();
+        ShipCollision.markActive();
+        Vec3 oldPos = position();
+        Quaternionf oldQ = new Quaternionf(currentOrientation());
+        List<AABB> oldBoxes = worldBoxes;
         if (level().isClientSide) {
             tickLerp();
             renderOrientationOld.set(renderOrientation);
             renderOrientation.slerp(targetOrientation, 0.5f);
+            updateWorldBoxes();
+            carryEntities(oldPos, oldQ, oldBoxes);
             return;
         }
         if (parts.isEmpty()) {
@@ -514,6 +621,9 @@ public class RocketEntity extends Entity {
             setPos(getX(), level().getMinBuildHeight() + 1, getZ());
             setDeltaMovement(after.x, 0.0, after.z);
         }
+
+        updateWorldBoxes();
+        carryEntities(oldPos, oldQ, oldBoxes);
 
         if (level() instanceof ServerLevel serverLevel && tickCount % 4 == 0) {
             serverLevel.getChunkSource().addRegionTicket(TicketType.PORTAL, new ChunkPos(blockPosition()), 3, blockPosition());
