@@ -222,6 +222,22 @@ public class RocketEntity extends Entity {
         return worldBoxes;
     }
 
+    public List<AABB> getLocalBoxes() {
+        return localBoxes;
+    }
+
+    public double getPivot() {
+        return boxHeight / 2.0;
+    }
+
+    public Quaternionf getCollisionOrientation() {
+        return new Quaternionf(currentOrientation());
+    }
+
+    public Quaternionf getViewOrientation(float partialTick) {
+        return level().isClientSide ? getRenderOrientation(partialTick) : new Quaternionf(orientation);
+    }
+
     public float getSeatYaw(Entity passenger) {
         int index = getPassengers().indexOf(passenger);
         if (index < 0 || seats.isEmpty()) return 0.0f;
@@ -263,6 +279,30 @@ public class RocketEntity extends Entity {
         return !(entity instanceof Player);
     }
 
+    private AABB localBoxOf(AABB world, Vec3 shipPos, Quaternionf q) {
+        Quaternionf inverse = new Quaternionf(q).conjugate();
+        double pivot = boxHeight / 2.0;
+        double loX = Double.MAX_VALUE;
+        double loY = Double.MAX_VALUE;
+        double loZ = Double.MAX_VALUE;
+        double hiX = -Double.MAX_VALUE;
+        double hiY = -Double.MAX_VALUE;
+        double hiZ = -Double.MAX_VALUE;
+        for (int i = 0; i < 8; i++) {
+            Vec3 corner = new Vec3((i & 1) == 0 ? world.minX : world.maxX,
+                    (i & 2) == 0 ? world.minY : world.maxY,
+                    (i & 4) == 0 ? world.minZ : world.maxZ);
+            Vec3 local = rotateVector(inverse, corner.subtract(shipPos).subtract(0.0, pivot, 0.0)).add(0.0, pivot, 0.0);
+            loX = Math.min(loX, local.x);
+            loY = Math.min(loY, local.y);
+            loZ = Math.min(loZ, local.z);
+            hiX = Math.max(hiX, local.x);
+            hiY = Math.max(hiY, local.y);
+            hiZ = Math.max(hiZ, local.z);
+        }
+        return new AABB(loX, loY, loZ, hiX, hiY, hiZ);
+    }
+
     private void carryEntities(Vec3 oldPos, Quaternionf oldQ, List<AABB> oldBoxes) {
         if (oldBoxes.isEmpty()) return;
         Quaternionf newQ = currentOrientation();
@@ -278,12 +318,12 @@ public class RocketEntity extends Entity {
 
         AABB area = getBoundingBox().inflate(Math.max(boxWidth, boxHeight) + 2.0);
         for (Entity entity : level().getEntitiesOfClass(Entity.class, area, this::canCarry)) {
-            AABB feet = entity.getBoundingBox();
+            AABB feet = localBoxOf(entity.getBoundingBox(), oldPos, oldQ);
             boolean standing = false;
-            for (AABB box : oldBoxes) {
+            for (AABB box : localBoxes) {
                 if (feet.maxX > box.minX + 1.0E-3 && feet.minX < box.maxX - 1.0E-3
                         && feet.maxZ > box.minZ + 1.0E-3 && feet.minZ < box.maxZ - 1.0E-3
-                        && Math.abs(feet.minY - box.maxY) < 0.15) {
+                        && feet.minY > box.maxY - 0.25 && feet.minY < box.maxY + 0.2) {
                     standing = true;
                     break;
                 }
@@ -702,22 +742,38 @@ public class RocketEntity extends Entity {
         BlockPos baseGuess = new BlockPos(Mth.floor(getX() + cx), Mth.floor(getY() - getOriginY() + 0.5), Mth.floor(getZ() + cz));
 
         BlockPos base = null;
-        for (int lift = 0; lift <= 3 && base == null; lift++) {
-            BlockPos candidate = baseGuess.above(lift);
-            if (fits(level, candidate, quarter)) base = candidate;
+        for (int lift = 0; lift <= 4 && base == null; lift++) {
+            for (int dx = -2; dx <= 2 && base == null; dx++) {
+                for (int dz = -2; dz <= 2 && base == null; dz++) {
+                    BlockPos candidate = baseGuess.offset(dx, lift, dz);
+                    if (fits(level, candidate, quarter)) base = candidate;
+                }
+            }
         }
         if (base == null) return false;
 
-        ejectPassengers();
-
         List<BlockPos> placed = new ArrayList<>();
-        List<FuelTankBlockEntity> tanks = new ArrayList<>();
-
+        List<BlockState> previous = new ArrayList<>();
+        boolean failed = false;
         for (Part part : parts) {
             BlockPos target = base.offset(rotateX(part.x(), part.z(), quarter), part.y(), rotateZ(part.x(), part.z(), quarter));
-            level.setBlock(target, part.state().rotate(rotation), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+            previous.add(level.getBlockState(target));
             placed.add(target);
+            if (!level.setBlock(target, part.state().rotate(rotation), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE)) {
+                failed = true;
+                break;
+            }
         }
+        if (failed) {
+            for (int i = 0; i < placed.size(); i++) {
+                level.setBlock(placed.get(i), previous.get(i), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+            }
+            return false;
+        }
+
+        ejectPassengers();
+
+        List<FuelTankBlockEntity> tanks = new ArrayList<>();
         for (int i = 0; i < parts.size(); i++) {
             Part part = parts.get(i);
             if (part.nbt() == null) continue;
@@ -736,6 +792,7 @@ public class RocketEntity extends Entity {
     private boolean fits(ServerLevel level, BlockPos base, int quarter) {
         for (Part part : parts) {
             BlockPos target = base.offset(rotateX(part.x(), part.z(), quarter), part.y(), rotateZ(part.x(), part.z(), quarter));
+            if (!level.isInWorldBounds(target) || !level.hasChunkAt(target)) return false;
             BlockState existing = level.getBlockState(target);
             if (!existing.isAir() && !existing.canBeReplaced()) return false;
         }

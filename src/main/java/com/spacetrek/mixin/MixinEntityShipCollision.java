@@ -1,8 +1,12 @@
 package com.spacetrek.mixin;
 
 import com.spacetrek.ShipCollision;
+import com.spacetrek.RocketEntity;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -17,5 +21,16 @@ public abstract class MixinEntityShipCollision {
         if (adjusted != null) {
             cir.setReturnValue(adjusted);
         }
+    }
+
+    @Inject(method = "getViewVector", at = @At("RETURN"), cancellable = true, require = 0)
+    private void spacetrek$shipView(float partialTick, CallbackInfoReturnable<Vec3> cir) {
+        Entity self = (Entity) (Object) this;
+        if (!(self instanceof Player) || !(self.getVehicle() instanceof RocketEntity rocket)) return;
+        Quaternionf q = rocket.getViewOrientation(partialTick);
+        Vec3 v = cir.getReturnValue();
+        Vector3f t = new Vector3f((float) v.x, (float) v.y, (float) v.z);
+        q.transform(t);
+        cir.setReturnValue(new Vec3(t.x, t.y, t.z));
     }
 }
