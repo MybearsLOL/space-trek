@@ -3,6 +3,7 @@ package com.spacetrek;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
+import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -35,6 +36,13 @@ public class SpaceTrek implements ModInitializer {
         UseEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
             if (entity instanceof RocketEntity rocket && !rocket.isAimedAt(player)) {
                 return InteractionResult.FAIL;
+            }
+            return InteractionResult.PASS;
+        });
+        AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
+            if (entity instanceof RocketEntity rocket && player.isSecondaryUseActive()) {
+                if (!world.isClientSide) rocket.breakAimedPart(player);
+                return InteractionResult.SUCCESS;
             }
             return InteractionResult.PASS;
         });
