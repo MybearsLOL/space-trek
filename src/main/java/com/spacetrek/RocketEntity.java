@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
@@ -111,6 +112,7 @@ public class RocketEntity extends Entity {
     private int inputFlags = 0;
     private int inputTick = -1000;
     private boolean dismountRequested = false;
+    private final Set<UUID> attached = new HashSet<>();
 
     private int lerpSteps;
     private double lerpX;
@@ -283,7 +285,8 @@ public class RocketEntity extends Entity {
     }
 
     private boolean canCarry(Entity entity) {
-        if (entity == this || entity instanceof RocketEntity || entity.isPassenger() || !entity.onGround()) return false;
+        if (entity == this || entity instanceof RocketEntity || entity.isPassenger() || entity.isSpectator()) return false;
+        if (entity instanceof Player flyer && flyer.getAbilities().flying) return false;
         if (level().isClientSide) {
             return entity instanceof Player player && player.isLocalPlayer();
         }
@@ -327,7 +330,23 @@ public class RocketEntity extends Entity {
         delta.transform(forward);
         float yawDelta = (float) -Math.toDegrees(Math.atan2(forward.x, forward.z));
 
-        AABB area = getBoundingBox().inflate(Math.max(boxWidth, boxHeight) + 2.0);
+        double bMinX = Double.MAX_VALUE;
+        double bMinY = Double.MAX_VALUE;
+        double bMinZ = Double.MAX_VALUE;
+        double bMaxX = -Double.MAX_VALUE;
+        double bMaxY = -Double.MAX_VALUE;
+        double bMaxZ = -Double.MAX_VALUE;
+        for (AABB box : localBoxes) {
+            bMinX = Math.min(bMinX, box.minX);
+            bMinY = Math.min(bMinY, box.minY);
+            bMinZ = Math.min(bMinZ, box.minZ);
+            bMaxX = Math.max(bMaxX, box.maxX);
+            bMaxY = Math.max(bMaxY, box.maxY);
+            bMaxZ = Math.max(bMaxZ, box.maxZ);
+        }
+
+        Set<UUID> seen = new HashSet<>();
+        AABB area = getBoundingBox().inflate(Math.max(boxWidth, boxHeight) + 4.0);
         for (Entity entity : level().getEntitiesOfClass(Entity.class, area, this::canCarry)) {
             AABB feet = localBoxOf(entity.getBoundingBox(), oldPos, oldQ);
             boolean standing = false;
@@ -339,7 +358,17 @@ public class RocketEntity extends Entity {
                     break;
                 }
             }
-            if (!standing) continue;
+            double cx = (feet.minX + feet.maxX) / 2.0;
+            double cz = (feet.minZ + feet.maxZ) / 2.0;
+            boolean inside = cx > bMinX - 0.6 && cx < bMaxX + 0.6 && cz > bMinZ - 0.6 && cz < bMaxZ + 0.6
+                    && feet.minY > bMinY - 0.6 && feet.minY < bMaxY + 3.0;
+            if (standing) {
+                attached.add(entity.getUUID());
+            } else if (!(attached.contains(entity.getUUID()) && inside)) {
+                attached.remove(entity.getUUID());
+                continue;
+            }
+            seen.add(entity.getUUID());
 
             Vec3 relative = entity.position().subtract(oldPos).subtract(0.0, pivot, 0.0);
             Vec3 turned = rotateVector(delta, relative);
@@ -350,6 +379,7 @@ public class RocketEntity extends Entity {
                 entity.yRotO += yawDelta;
             }
         }
+        attached.retainAll(seen);
     }
 
     @Override
