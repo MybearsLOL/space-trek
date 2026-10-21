@@ -2,6 +2,7 @@ package com.spacetrek.mixin;
 
 import com.spacetrek.ShipCollision;
 import com.spacetrek.RocketEntity;
+import com.spacetrek.Shipyard;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -32,5 +33,17 @@ public abstract class MixinEntityShipCollision {
         Vector3f t = new Vector3f((float) v.x, (float) v.y, (float) v.z);
         q.transform(t);
         cir.setReturnValue(new Vec3(t.x, t.y, t.z));
+    }
+
+    @Inject(method = "distanceToSqr(DDD)D", at = @At("HEAD"), cancellable = true, require = 0)
+    private void spacetrek$yardDistance(double x, double y, double z, CallbackInfoReturnable<Double> cir) {
+        Entity self = (Entity) (Object) this;
+        if (!(self instanceof Player) || !Shipyard.contains(x, z)) return;
+        Vec3 world = Shipyard.toWorld(x, y, z);
+        if (world == null) return;
+        double dx = self.getX() - world.x;
+        double dy = self.getY() - world.y;
+        double dz = self.getZ() - world.z;
+        cir.setReturnValue(dx * dx + dy * dy + dz * dz);
     }
 }

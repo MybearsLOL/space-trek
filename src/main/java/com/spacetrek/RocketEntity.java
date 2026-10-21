@@ -6,6 +6,11 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.function.Supplier;
+import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
@@ -21,16 +26,8 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.TicketType;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.DoorBlock;
-import net.minecraft.world.level.block.FenceGateBlock;
-import net.minecraft.world.level.block.StairBlock;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -63,7 +60,7 @@ public class RocketEntity extends Entity {
     public record Part(int x, int y, int z, BlockState state, @Nullable CompoundTag nbt) {
     }
 
-    public record PartHit(Part part, double distance, Direction face) {
+    public record PartHit(Part part, double distance, Direction face, Vec3 point) {
     }
 
     public static final int INPUT_ROLL_LEFT = 1;
@@ -122,6 +119,9 @@ public class RocketEntity extends Entity {
     private int inputFlags = 0;
     private int inputTick = -1000;
     private boolean dismountRequested = false;
+    private int plotIndex = -1;
+    private boolean yardDirty = true;
+    private boolean importFailed = false;
     private final Set<UUID> attached = new HashSet<>();
 
     private int lerpSteps;
@@ -522,7 +522,7 @@ public class RocketEntity extends Entity {
                     } else {
                         face = d.z > 0.0 ? Direction.SOUTH : Direction.NORTH;
                     }
-                    best = new PartHit(part, distance, face);
+                    best = new PartHit(part, distance, face, hit.get());
                 }
             }
         }
@@ -537,6 +537,7 @@ public class RocketEntity extends Entity {
     @Override
     protected void readAdditionalSaveData(CompoundTag tag) {
         readParts(tag);
+        plotIndex = tag.contains("Plot") ? tag.getInt("Plot") : -1;
         fuelMb = tag.getDouble("Fuel");
         if (tag.contains("OrientW")) {
             orientation.set(tag.getFloat("OrientX"), tag.getFloat("OrientY"), tag.getFloat("OrientZ"), tag.getFloat("OrientW"));
@@ -549,7 +550,8 @@ public class RocketEntity extends Entity {
 
     @Override
     protected void addAdditionalSaveData(CompoundTag tag) {
-        tag.put("Parts", writeParts(true).getList("Parts", Tag.TAG_COMPOUND));
+        tag.put("Parts", writeParts(plotIndex < 0).getList("Parts", Tag.TAG_COMPOUND));
+        tag.putInt("Plot", plotIndex);
         tag.putDouble("Fuel", fuelMb);
         tag.putFloat("OrientX", orientation.x);
         tag.putFloat("OrientY", orientation.y);
@@ -586,17 +588,11 @@ public class RocketEntity extends Entity {
     public InteractionResult interact(Player player, InteractionHand hand) {
         if (level().isClientSide) return InteractionResult.SUCCESS;
 
-        PartHit hit = aimedPart(player);
-        ItemStack held = player.getItemInHand(hand);
+        ServerLevel yard = plotIndex >= 0 ? yard() : null;
         boolean sneaking = player.isSecondaryUseActive();
-        boolean special = hit != null && (hit.part().state().hasProperty(BlockStateProperties.OPEN)
-                || hit.part().state().getBlock() instanceof RocketSeatBlock
-                || hit.part().state().getBlock() instanceof RocketControllerBlock);
-        if (hit != null && held.getItem() instanceof BlockItem blockItem && (!special || sneaking)) {
-            return placeBlock(player, held, hit, blockItem);
-        }
+        ItemStack held = player.getItemInHand(hand);
 
-        if (sneaking) {
+        if (sneaking && held.isEmpty()) {
             boolean slow = getDeltaMovement().lengthSqr() < 0.02;
             if (!(slow || onGround()) || !disassemble()) {
                 player.displayClientMessage(Component.translatable("message.space-trek.rocket_cannot_land"), true);
@@ -604,10 +600,17 @@ public class RocketEntity extends Entity {
             return InteractionResult.CONSUME;
         }
 
-        if (hit != null && hit.part().state().hasProperty(BlockStateProperties.OPEN)) {
-            toggleOpen(hit.part());
-            return InteractionResult.CONSUME;
+        if (yard != null && player instanceof ServerPlayer serverPlayer) {
+            PartHit hit = aimedPart(player);
+            if (hit != null) {
+                BlockHitResult blockHit = toBlockHit(hit);
+                InteractionResult result = withShipLook(serverPlayer, () -> useOnBlock(serverPlayer, yard, hand, blockHit));
+                yardDirty = true;
+                if (result != InteractionResult.PASS) return InteractionResult.CONSUME;
+            }
         }
+
+        if (!held.isEmpty()) return InteractionResult.CONSUME;
 
         if (seats.isEmpty()) {
             player.displayClientMessage(Component.translatable("message.space-trek.rocket_no_seat"), true);
@@ -617,6 +620,66 @@ public class RocketEntity extends Entity {
         return InteractionResult.CONSUME;
     }
 
+    private InteractionResult useOnBlock(ServerPlayer player, ServerLevel yard, InteractionHand hand, BlockHitResult hit) {
+        BlockPos pos = hit.getBlockPos();
+        BlockState state = yard.getBlockState(pos);
+        ItemStack stack = player.getItemInHand(hand);
+        boolean holding = !player.getMainHandItem().isEmpty() || !player.getOffhandItem().isEmpty();
+        boolean suppress = player.isSecondaryUseActive() && holding;
+        if (!suppress) {
+            ItemInteractionResult itemResult = state.useItemOn(stack, yard, player, hand, hit);
+            if (itemResult.consumesAction()) return InteractionResult.CONSUME;
+            if (itemResult == ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION && hand == InteractionHand.MAIN_HAND) {
+                InteractionResult blockResult = state.useWithoutItem(yard, player, hit);
+                if (blockResult.consumesAction()) return InteractionResult.CONSUME;
+            }
+        }
+        if (!stack.isEmpty() && !player.getCooldowns().isOnCooldown(stack.getItem())) {
+            int count = stack.getCount();
+            InteractionResult result = stack.useOn(new UseOnContext(yard, player, hand, stack, hit));
+            if (player.getAbilities().instabuild) stack.setCount(count);
+            return result;
+        }
+        return InteractionResult.PASS;
+    }
+
+    private InteractionResult withShipLook(ServerPlayer player, Supplier<InteractionResult> action) {
+        Quaternionf inverse = new Quaternionf(currentOrientation()).conjugate();
+        Vec3 look = rotateVector(inverse, player.getLookAngle());
+        float oldYaw = player.getYRot();
+        float oldPitch = player.getXRot();
+        player.setYRot((float) Math.toDegrees(Math.atan2(-look.x, look.z)));
+        player.setXRot((float) -Math.toDegrees(Math.asin(Mth.clamp(look.y, -1.0, 1.0))));
+        try {
+            return action.get();
+        } finally {
+            player.setYRot(oldYaw);
+            player.setXRot(oldPitch);
+        }
+    }
+
+    private BlockHitResult toBlockHit(PartHit hit) {
+        Part part = hit.part();
+        BlockPos pos = Shipyard.anchor(plotIndex).offset(part.x(), part.y(), part.z());
+        Vec3 corner = new Vec3(part.x() - getOriginX(), part.y() - getOriginY(), part.z() - getOriginZ());
+        Vec3 fraction = hit.point().subtract(corner);
+        Vec3 location = new Vec3(pos.getX() + fraction.x, pos.getY() + fraction.y, pos.getZ() + fraction.z);
+        return new BlockHitResult(location, hit.face(), pos, false);
+    }
+
+    @Nullable
+    private ServerLevel yard() {
+        if (level().getServer() == null) return null;
+        return Shipyard.level(level().getServer());
+    }
+
+    public Vec3 yardToWorld(double x, double y, double z) {
+        BlockPos anchor = Shipyard.anchor(plotIndex);
+        Vec3 local = new Vec3(x - anchor.getX() - getOriginX(), y - anchor.getY() - getOriginY(), z - anchor.getZ() - getOriginZ());
+        Vec3 world = toWorld(local);
+        return new Vec3(getX() + world.x, getY() + world.y, getZ() + world.z);
+    }
+
     @Nullable
     private PartHit aimedPart(Player player) {
         Vec3 eye = player.getEyePosition();
@@ -624,18 +687,94 @@ public class RocketEntity extends Entity {
         return raycastParts(eye, end, position(), currentOrientation());
     }
 
-    @Nullable
-    private Part findPart(int x, int y, int z) {
-        for (Part part : parts) {
-            if (part.x() == x && part.y() == y && part.z() == z) return part;
+    private void importToYard() {
+        ServerLevel yard = yard();
+        if (yard == null) {
+            importFailed = true;
+            return;
         }
-        return null;
+        for (Part part : parts) {
+            if (Math.abs(part.x()) > Shipyard.REACH || Math.abs(part.y()) > Shipyard.REACH || Math.abs(part.z()) > Shipyard.REACH) {
+                importFailed = true;
+                return;
+            }
+        }
+        int index = Shipyard.allocate(yard);
+        BlockPos anchor = Shipyard.anchor(index);
+        for (Part part : parts) {
+            yard.setBlock(anchor.offset(part.x(), part.y(), part.z()), part.state(), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+        }
+        for (Part part : parts) {
+            if (part.nbt() == null) continue;
+            BlockEntity be = yard.getBlockEntity(anchor.offset(part.x(), part.y(), part.z()));
+            if (be != null) be.loadWithComponents(part.nbt(), yard.registryAccess());
+        }
+        plotIndex = index;
+        List<Part> stripped = new ArrayList<>(parts.size());
+        for (Part part : parts) {
+            stripped.add(new Part(part.x(), part.y(), part.z(), part.state(), null));
+        }
+        parts = stripped;
     }
 
-    private boolean isPartner(Part base, Part other) {
-        return base.state().hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF)
-                && other.state().getBlock() == base.state().getBlock()
-                && other.x() == base.x() && other.z() == base.z() && Math.abs(other.y() - base.y()) == 1;
+    private void keepYardLoaded(ServerLevel yard) {
+        BlockPos anchor = Shipyard.anchor(plotIndex);
+        int cx0 = (anchor.getX() + minX - 1) >> 4;
+        int cx1 = (anchor.getX() + maxX + 1) >> 4;
+        int cz0 = (anchor.getZ() + minZ - 1) >> 4;
+        int cz1 = (anchor.getZ() + maxZ + 1) >> 4;
+        for (int cx = cx0; cx <= cx1; cx++) {
+            for (int cz = cz0; cz <= cz1; cz++) {
+                ChunkPos chunk = new ChunkPos(cx, cz);
+                yard.getChunkSource().addRegionTicket(TicketType.PORTAL, chunk, 2, chunk.getWorldPosition());
+            }
+        }
+    }
+
+    private void rescan(ServerLevel yard) {
+        BlockPos anchor = Shipyard.anchor(plotIndex);
+        int x0 = Math.max(minX - 2, -Shipyard.REACH);
+        int x1 = Math.min(maxX + 2, Shipyard.REACH);
+        int y0 = Math.max(minY - 2, -Shipyard.REACH);
+        int y1 = Math.min(maxY + 2, Shipyard.REACH);
+        int z0 = Math.max(minZ - 2, -Shipyard.REACH);
+        int z1 = Math.min(maxZ + 2, Shipyard.REACH);
+        List<Part> found = new ArrayList<>();
+        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+        for (int x = x0; x <= x1; x++) {
+            for (int y = y0; y <= y1; y++) {
+                for (int z = z0; z <= z1; z++) {
+                    cursor.set(anchor.getX() + x, anchor.getY() + y, anchor.getZ() + z);
+                    BlockState state = yard.getBlockState(cursor);
+                    if (!state.isAir()) found.add(new Part(x, y, z, state, null));
+                }
+            }
+        }
+        if (found.isEmpty() || found.equals(parts)) return;
+        mutate(found);
+    }
+
+    private List<Part> snapshotParts(ServerLevel yard) {
+        BlockPos anchor = Shipyard.anchor(plotIndex);
+        List<Part> out = new ArrayList<>();
+        for (Part part : parts) {
+            BlockPos pos = anchor.offset(part.x(), part.y(), part.z());
+            BlockState state = yard.getBlockState(pos);
+            if (state.isAir()) continue;
+            BlockEntity be = yard.getBlockEntity(pos);
+            CompoundTag nbt = be != null ? be.saveWithFullMetadata(yard.registryAccess()) : null;
+            out.add(new Part(part.x(), part.y(), part.z(), state, nbt));
+        }
+        return out;
+    }
+
+    private void clearYard(ServerLevel yard, List<Part> source) {
+        BlockPos anchor = Shipyard.anchor(plotIndex);
+        for (Part part : source) {
+            BlockPos pos = anchor.offset(part.x(), part.y(), part.z());
+            yard.removeBlockEntity(pos);
+            yard.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_SUPPRESS_DROPS);
+        }
     }
 
     private void mutate(List<Part> list) {
@@ -652,70 +791,10 @@ public class RocketEntity extends Entity {
         if (getPassengers().size() > seats.size()) ejectPassengers();
     }
 
-    private BlockState orient(BlockState state, Direction face, Player player) {
-        Quaternionf inverse = new Quaternionf(currentOrientation()).conjugate();
-        Vec3 look = rotateVector(inverse, player.getLookAngle());
-        Direction facing = Direction.getNearest(look.x, 0.0, look.z);
-        Block block = state.getBlock();
-        boolean same = block instanceof RocketSeatBlock || block instanceof DoorBlock
-                || block instanceof StairBlock || block instanceof FenceGateBlock;
-        if (state.hasProperty(BlockStateProperties.FACING)) {
-            return state.setValue(BlockStateProperties.FACING, face);
-        }
-        if (state.hasProperty(BlockStateProperties.HORIZONTAL_FACING)) {
-            return state.setValue(BlockStateProperties.HORIZONTAL_FACING, same ? facing : facing.getOpposite());
-        }
-        return state;
-    }
-
-    private InteractionResult placeBlock(Player player, ItemStack held, PartHit hit, BlockItem item) {
-        BlockState state = item.getBlock().defaultBlockState();
-        if (state.is(RocketAssembler.EXCLUDED_BLOCKS) || !state.getFluidState().isEmpty()
-                || state.getDestroySpeed(EmptyBlockGetter.INSTANCE, BlockPos.ZERO) < 0.0f) {
-            player.displayClientMessage(Component.literal("That block cannot be attached to a ship"), true);
-            return InteractionResult.CONSUME;
-        }
-        if (parts.size() >= 512) {
-            player.displayClientMessage(Component.literal("The ship is too large"), true);
-            return InteractionResult.CONSUME;
-        }
-        Direction face = hit.face();
-        int px = hit.part().x() + face.getStepX();
-        int py = hit.part().y() + face.getStepY();
-        int pz = hit.part().z() + face.getStepZ();
-        if (findPart(px, py, pz) != null) return InteractionResult.CONSUME;
-
-        state = orient(state, face, player);
-        List<Part> list = new ArrayList<>(parts);
-        if (state.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF)) {
-            if (findPart(px, py + 1, pz) != null) return InteractionResult.CONSUME;
-            list.add(new Part(px, py, pz, state.setValue(BlockStateProperties.DOUBLE_BLOCK_HALF, DoubleBlockHalf.LOWER), null));
-            list.add(new Part(px, py + 1, pz, state.setValue(BlockStateProperties.DOUBLE_BLOCK_HALF, DoubleBlockHalf.UPPER), null));
-        } else {
-            list.add(new Part(px, py, pz, state, null));
-        }
-        mutate(list);
-        level().playSound(null, getX(), getY(), getZ(), state.getSoundType().getPlaceSound(), SoundSource.BLOCKS, 1.0f, 0.8f);
-        if (!player.getAbilities().instabuild) held.shrink(1);
-        return InteractionResult.CONSUME;
-    }
-
-    private void toggleOpen(Part target) {
-        boolean open = !target.state().getValue(BlockStateProperties.OPEN);
-        List<Part> list = new ArrayList<>(parts);
-        for (int i = 0; i < list.size(); i++) {
-            Part part = list.get(i);
-            if (part == target || isPartner(target, part)) {
-                list.set(i, new Part(part.x(), part.y(), part.z(), part.state().setValue(BlockStateProperties.OPEN, open), part.nbt()));
-            }
-        }
-        mutate(list);
-        level().playSound(null, getX(), getY(), getZ(), open ? SoundEvents.WOODEN_DOOR_OPEN : SoundEvents.WOODEN_DOOR_CLOSE,
-                SoundSource.BLOCKS, 1.0f, 1.0f);
-    }
-
     public boolean breakAimedPart(Player player) {
         if (level().isClientSide) return false;
+        ServerLevel yard = plotIndex >= 0 ? yard() : null;
+        if (yard == null) return false;
         PartHit hit = aimedPart(player);
         if (hit == null) return false;
         Part part = hit.part();
@@ -723,23 +802,16 @@ public class RocketEntity extends Entity {
             player.displayClientMessage(Component.literal("The controller cannot be removed"), true);
             return true;
         }
-        List<Part> list = new ArrayList<>(parts);
-        boolean drop = true;
-        for (Part other : parts) {
-            if (isPartner(part, other)) {
-                list.remove(other);
-                if (part.state().getValue(BlockStateProperties.DOUBLE_BLOCK_HALF) == DoubleBlockHalf.UPPER) {
-                    drop = false;
-                }
-            }
-        }
-        list.remove(part);
-        mutate(list);
-        level().playSound(null, getX(), getY(), getZ(), part.state().getSoundType().getBreakSound(), SoundSource.BLOCKS, 1.0f, 0.8f);
-        if (drop && !player.getAbilities().instabuild) {
-            ItemStack stack = new ItemStack(part.state().getBlock());
+        BlockPos pos = Shipyard.anchor(plotIndex).offset(part.x(), part.y(), part.z());
+        BlockState state = yard.getBlockState(pos);
+        BlockEntity be = yard.getBlockEntity(pos);
+        List<ItemStack> drops = player.getAbilities().instabuild ? List.of()
+                : Block.getDrops(state, yard, pos, be, player, player.getMainHandItem());
+        yard.destroyBlock(pos, false);
+        for (ItemStack stack : drops) {
             if (!player.addItem(stack)) player.drop(stack, false);
         }
+        yardDirty = true;
         return true;
     }
 
@@ -801,6 +873,18 @@ public class RocketEntity extends Entity {
             updateWorldBoxes();
             carryEntities(oldPos, oldQ, oldBoxes);
             return;
+        }
+        if (plotIndex < 0 && !parts.isEmpty() && !importFailed) importToYard();
+        if (plotIndex >= 0) {
+            Shipyard.register(plotIndex, this);
+            ServerLevel yard = yard();
+            if (yard != null) {
+                if (tickCount % 10 == 0) keepYardLoaded(yard);
+                if (yardDirty || tickCount % 10 == 0) {
+                    yardDirty = false;
+                    rescan(yard);
+                }
+            }
         }
         if (parts.isEmpty()) {
             discard();
@@ -962,6 +1046,9 @@ public class RocketEntity extends Entity {
 
     private boolean disassemble() {
         if (!(level() instanceof ServerLevel level)) return false;
+        ServerLevel yard = plotIndex >= 0 ? yard() : null;
+        if (plotIndex >= 0 && yard == null) return false;
+        if (yard != null) rescan(yard);
 
         Vector3f forward = new Vector3f(0.0f, 0.0f, 1.0f);
         orientation.transform(forward);
@@ -995,10 +1082,11 @@ public class RocketEntity extends Entity {
         }
         if (base == null) return false;
 
+        List<Part> source = yard != null ? snapshotParts(yard) : parts;
         List<BlockPos> placed = new ArrayList<>();
         List<BlockState> previous = new ArrayList<>();
         boolean failed = false;
-        for (Part part : parts) {
+        for (Part part : source) {
             BlockPos target = base.offset(rotateX(part.x(), part.z(), quarter), part.y(), rotateZ(part.x(), part.z(), quarter));
             previous.add(level.getBlockState(target));
             placed.add(target);
@@ -1017,8 +1105,8 @@ public class RocketEntity extends Entity {
         ejectPassengers();
 
         List<FuelTankBlockEntity> tanks = new ArrayList<>();
-        for (int i = 0; i < parts.size(); i++) {
-            Part part = parts.get(i);
+        for (int i = 0; i < source.size(); i++) {
+            Part part = source.get(i);
             if (part.nbt() == null) continue;
             BlockEntity be = level.getBlockEntity(placed.get(i));
             if (be != null) {
@@ -1028,6 +1116,7 @@ public class RocketEntity extends Entity {
         }
         FuelTankBlockEntity.fillRocketFuel(tanks, (int) fuelMb);
 
+        if (yard != null) clearYard(yard, source);
         discard();
         return true;
     }

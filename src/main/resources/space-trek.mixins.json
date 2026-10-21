@@ -7,7 +7,8 @@
 		"MixinLivingEntity",
 		"EntityMixin",
 		"MixinEntityShipCollision",
-		"MixinServerPlayerShip"
+		"MixinServerPlayerShip",
+		"MixinPlayerYard"
 	],
 	"injectors": {
 		"defaultRequire": 1
